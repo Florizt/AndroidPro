@@ -8,6 +8,7 @@ import com.dgrlucky.log.LogX
 object AppLogger {
     private var debug = true
 
+    @JvmStatic
     fun init(debug: Boolean) {
         AppLogger.debug = debug
     }
@@ -16,6 +17,7 @@ object AppLogger {
         V, D, I, W, E
     }
 
+    @JvmStatic
     fun log(level: LEVEL, any: Any) {
         if (!debug) return
         when (level) {
@@ -45,6 +47,7 @@ object AppLogger {
         }
     }
 
+    @JvmStatic
     fun log(level: LEVEL, msg: String, vararg args: Any) {
         if (!debug) return
         when (level) {

@@ -1,8 +1,13 @@
 package com.florizt.base.repository.net.entity
 
+import android.os.Parcelable
+import kotlinx.parcelize.Parcelize
+import kotlinx.parcelize.RawValue
+
 /**
  * 分页结构的数据
  */
+@Parcelize
 data class PageData<out T>(
     /**
      * 页码
@@ -23,8 +28,8 @@ data class PageData<out T>(
     /**
      * 分页数据
      */
-    val list: List<T>
-) {
+    val list: List<@RawValue T>
+) : Parcelable {
     /**
      * 是否有下一页
      * @return Boolean

@@ -1,9 +1,4 @@
-/**
- * Created by wuwei
- * 2023/5/26
- * 佛祖保佑       永无BUG
- * desc：
- */
+
 object ThirdParty {
     const val glide = "com.github.bumptech.glide:glide:4.10.0"
     const val glideCompiler = "com.github.bumptech.glide:compiler:4.10.0"

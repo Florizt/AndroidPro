@@ -1,11 +1,6 @@
-/**
- * Created by wuwei
- * 2023/5/26
- * 佛祖保佑       永无BUG
- * desc：
- */
+
 object Kotlin {
-    var kotlin_version = "1.4.20"
+    var kotlin_version = "1.8.0"
 
     val stdlib = "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
     val serialization = "org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.1"

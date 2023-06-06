@@ -23,7 +23,7 @@ class ApiResponseCall<T>(
     private val delegate: Call<T>,
     private val gson: Gson,
     private val successCode: String,
-    private val mapper: ((any: Any) -> ApiResponse<*>)
+    private val mapper: ((T) -> ApiResponse<*>),
 ) : Call<ApiResponse<*>> {
 
     override fun clone(): Call<ApiResponse<*>> {
@@ -52,8 +52,9 @@ class ApiResponseCall<T>(
         if (response.isSuccessful) {
             val body = response.body()
             if (body != null) {
-                val t = (mapper.invoke(body))
+                val t = mapper.invoke(body)
                 if (t.code == successCode) {
+                    t.isSuccess = true
                     Response.success(t)
                 } else {
                     Response.success(ApiResponse(t.code, t.msg, null))
@@ -99,7 +100,7 @@ class ApiResponseCallAdapter<T>(
     private val responseType: Type,
     private val gson: Gson,
     private val successCode: String,
-    private val mapper: ((any: Any) -> ApiResponse<*>)
+    private val mapper: ((T) -> ApiResponse<*>),
 ) : CallAdapter<T, ApiResponseCall<T>> {
 
     override fun responseType(): Type = responseType
@@ -109,16 +110,16 @@ class ApiResponseCallAdapter<T>(
     }
 }
 
-class ApiResponseCallAdapterFactory(
+class ApiResponseCallAdapterFactory<T>(
     private val gson: Gson,
     private val successCode: String,
-    private val mapper: ((any: Any) -> ApiResponse<*>),
+    private val mapper: ((T) -> ApiResponse<*>),
 ) : CallAdapter.Factory() {
 
     override fun get(
         returnType: Type,
         annotations: Array<Annotation>,
-        retrofit: Retrofit
+        retrofit: Retrofit,
     ): CallAdapter<*, *>? {
 
         if (Call::class.java != getRawType(returnType)) {
@@ -134,6 +135,6 @@ class ApiResponseCallAdapterFactory(
             return null
         }
 
-        return ApiResponseCallAdapter<Any>(responseType, gson, successCode, mapper)
+        return ApiResponseCallAdapter<T>(responseType, gson, successCode, mapper)
     }
 }

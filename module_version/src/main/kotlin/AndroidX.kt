@@ -1,9 +1,4 @@
-/**
- * Created by wuwei
- * 2023/5/26
- * 佛祖保佑       永无BUG
- * desc：
- */
+
 object AndroidX {
     const val appCompat = "androidx.appcompat:appcompat:1.5.1"
     const val startup = "androidx.startup:startup-runtime:1.0.0"

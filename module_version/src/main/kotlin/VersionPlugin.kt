@@ -5,14 +5,13 @@ import org.gradle.api.JavaVersion
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.plugins.PluginContainer
-import org.gradle.kotlin.dsl.apply
 import org.gradle.kotlin.dsl.getByType
 import org.gradle.kotlin.dsl.withType
 import org.jetbrains.kotlin.gradle.plugin.getKotlinPluginVersion
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
-const val api = "api"
 const val implementation = "implementation"
+const val api = "api"
 const val kapt = "kapt"
 
 class VersionPlugin : Plugin<Project> {
@@ -21,27 +20,27 @@ class VersionPlugin : Plugin<Project> {
     }
 
     private fun PluginContainer.config(project: Project) {
-       if(project.plugins.hasPlugin(AppPlugin::class.java)){
-           project.plugins.getPlugin(AppPlugin::class.java).apply {
-               //公共插件
-               project.configPlugin()
-               //公共 android 配置项
-               project.extensions.getByType<AppExtension>().configBuilds(project)
-               Kotlin.kotlin_version = project.getKotlinPluginVersion()
-           }
-       }
-
-        if(project.plugins.hasPlugin(LibraryPlugin::class.java)){
-            project.plugins.getPlugin(LibraryPlugin::class.java).apply {
-                //公共插件
-                project.configPlugin()
-                //公共 android 配置项
-                project.extensions.getByType<LibraryExtension>().configBuilds(project)
-                //公共依赖
-                project.configLibraryDependencies()
-                Kotlin.kotlin_version = project.getKotlinPluginVersion()
+        if (project.plugins.hasPlugin(AppPlugin::class.java)) {
+            project.plugins.getPlugin(AppPlugin::class.java).apply {
+                configs(project, project.extensions.getByType<AppExtension>())
             }
         }
+
+        if (project.plugins.hasPlugin(LibraryPlugin::class.java)) {
+            project.plugins.getPlugin(LibraryPlugin::class.java).apply {
+                configs(project, project.extensions.getByType<LibraryExtension>())
+            }
+        }
+    }
+
+    private fun configs(project: Project, extension: BaseExtension) {
+        //公共插件
+        project.configPlugin()
+        //公共 android 配置项
+        extension.configBuilds(project)
+        //公共依赖
+        project.configLibraryDependencies()
+        Kotlin.kotlin_version = project.getKotlinPluginVersion()
     }
 
 
@@ -90,51 +89,51 @@ class VersionPlugin : Plugin<Project> {
      */
     private fun Project.configLibraryDependencies() {
         dependencies.apply {
-            add(api, fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar"))))
-            add(api, Kotlin.stdlib)
-            add(api, Kotlin.serialization)
-            add(api, Kotlin.Coroutines.core)
-            add(api, Kotlin.Coroutines.android)
-            add(api, AndroidX.appCompat)
-            add(api, AndroidX.startup)
-            add(api, AndroidX.cardview)
-            add(api, AndroidX.recyclerView)
-            add(api, AndroidX.recyclerView_selection)
-            add(api, AndroidX.constraintLayout)
-            add(api, AndroidX.drawerLayout)
-            add(api, AndroidX.swipeRefreshLayout)
-            add(api, AndroidX.viewPager2)
-            add(api, AndroidX.Core.ktx)
-            add(api, AndroidX.Activity.ktx)
-            add(api, AndroidX.Fragment.ktx)
-            add(api, AndroidX.Lifecycle.runtime)
-            add(api, AndroidX.Lifecycle.viewmodel)
-            add(api, AndroidX.Lifecycle.jdk8)
-            add(api, AndroidX.Lifecycle.savedstate)
-            add(api, AndroidX.Lifecycle.process)
-            add(api, AndroidX.Room.runtime)
-            add(api, AndroidX.Room.compiler)
-            add(api, AndroidX.Room.ktx)
-            add(api, AndroidX.Room.paging)
-            add(api, AndroidX.Paging.runtime)
-            add(api, AndroidX.Work.runtime)
-            add(api, AndroidX.DataStore.core)
-            add(api, AndroidX.DataStore.preferences)
-            add(api, Google.material)
-            add(api, Google.gson)
-            add(api, Square.OkHttp.okhttp)
-            add(api, Square.OkHttp.logging)
-            add(api, Square.OkHttp.urlConnection)
-            add(api, Square.Retrofit.retrofit)
-            add(api, Square.Retrofit.scalarsConverter)
-            add(api, Square.Retrofit.gsonConverter)
-            add(api, ThirdParty.glide)
+            add(implementation, fileTree(mapOf("dir" to "libs", "include" to listOf("*.jar"))))
+            add(implementation, Kotlin.stdlib)
+            add(implementation, Kotlin.serialization)
+            add(implementation, Kotlin.Coroutines.core)
+            add(implementation, Kotlin.Coroutines.android)
+            add(implementation, AndroidX.appCompat)
+            add(implementation, AndroidX.startup)
+            add(implementation, AndroidX.cardview)
+            add(implementation, AndroidX.recyclerView)
+            add(implementation, AndroidX.recyclerView_selection)
+            add(implementation, AndroidX.constraintLayout)
+            add(implementation, AndroidX.drawerLayout)
+            add(implementation, AndroidX.swipeRefreshLayout)
+            add(implementation, AndroidX.viewPager2)
+            add(implementation, AndroidX.Core.ktx)
+            add(implementation, AndroidX.Activity.ktx)
+            add(implementation, AndroidX.Fragment.ktx)
+            add(implementation, AndroidX.Lifecycle.runtime)
+            add(implementation, AndroidX.Lifecycle.viewmodel)
+            add(implementation, AndroidX.Lifecycle.jdk8)
+            add(implementation, AndroidX.Lifecycle.savedstate)
+            add(implementation, AndroidX.Lifecycle.process)
+            add(implementation, AndroidX.Room.runtime)
+            add(implementation, AndroidX.Room.compiler)
+            add(implementation, AndroidX.Room.ktx)
+            add(implementation, AndroidX.Room.paging)
+            add(implementation, AndroidX.Paging.runtime)
+            add(implementation, AndroidX.Work.runtime)
+            add(implementation, AndroidX.DataStore.core)
+            add(implementation, AndroidX.DataStore.preferences)
+            add(implementation, Google.material)
+            add(implementation, Google.gson)
+            add(implementation, Square.OkHttp.okhttp)
+            add(implementation, Square.OkHttp.logging)
+            add(implementation, Square.OkHttp.urlConnection)
+            add(implementation, Square.Retrofit.retrofit)
+            add(implementation, Square.Retrofit.scalarsConverter)
+            add(implementation, Square.Retrofit.gsonConverter)
+            add(implementation, ThirdParty.glide)
             add(kapt, ThirdParty.glideCompiler)
-            add(api, ThirdParty.immersionbar)
-            add(api, ThirdParty.autosize)
-            add(api, ThirdParty.backgroundLibrary)
-            add(api, ThirdParty.mmkv)
-            add(api, ThirdParty.logx)
+            add(implementation, ThirdParty.immersionbar)
+            add(implementation, ThirdParty.autosize)
+            add(implementation, ThirdParty.backgroundLibrary)
+            add(implementation, ThirdParty.mmkv)
+            add(implementation, ThirdParty.logx)
         }
     }
 }

@@ -20,7 +20,7 @@ inline fun <Local, Remote> networkBoundResource(
     crossinline cache: () -> Flow<Local?>,
     crossinline fetch: suspend () -> ApiResponse<Remote>,
     crossinline transfer: (Remote) -> Local,
-    crossinline fetch2Cache: suspend (Local) -> Unit = {}
+    crossinline fetch2Cache: suspend (Local) -> Unit = {},
 ) = flow {
     emit(Resource.loading())
 
@@ -33,7 +33,7 @@ inline fun <Local, Remote> networkBoundResource(
     })
 
     emit(fetch().run {
-        if (code == RetrofitFactory.successCode) {
+        if (isSuccess == true) {
             data?.run {
                 Resource.success(transfer(this).apply { fetch2Cache(this) })
             } ?: run {
@@ -55,12 +55,12 @@ inline fun <Local, Remote> networkBoundResource(
 inline fun <Local, Remote> networkBoundResourceNoCache(
     crossinline fetch: suspend () -> ApiResponse<Remote>,
     crossinline transfer: (Remote) -> Local,
-    crossinline fetch2Cache: suspend (Local) -> Unit = {}
+    crossinline fetch2Cache: suspend (Local) -> Unit = {},
 ) = flow {
     emit(Resource.loading())
 
     emit(fetch().run {
-        if (code == RetrofitFactory.successCode) {
+        if (isSuccess == true) {
             data?.run {
                 Resource.success(transfer(this).apply { fetch2Cache(this) })
             } ?: run {
@@ -78,7 +78,7 @@ inline fun <Local, Remote> networkBoundResourceNoCache(
  * @return Flow<Resource<Local & Any>>
  */
 inline fun <Local, Remote> networkBoundResourceOnlyCache(
-    crossinline cache: () -> Flow<Local?>
+    crossinline cache: () -> Flow<Local?>,
 ) = flow {
     emit(Resource.loading())
 

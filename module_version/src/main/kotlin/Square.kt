@@ -1,9 +1,4 @@
-/**
- * Created by wuwei
- * 2023/5/26
- * 佛祖保佑       永无BUG
- * desc：
- */
+
 object Square {
     object OkHttp {
         private const val okhttp_version = "3.14.9"

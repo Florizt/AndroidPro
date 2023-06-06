@@ -1,10 +1,13 @@
-package com.florizt.base.app
+package com.florizt.base.ui
 
+import android.app.Activity
+import android.app.Application
+import android.app.Application.ActivityLifecycleCallbacks
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
-import androidx.fragment.app.Fragment
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
+import com.florizt.base.delegate.noOpDelegate
 import com.gyf.barlibrary.BarHide
 import com.gyf.barlibrary.ImmersionBar
 
@@ -38,22 +41,12 @@ annotation class ImmersionBars(
  * @property onKeyboardChange Function2<[@kotlin.ParameterName] Boolean, [@kotlin.ParameterName] Int, Unit>
  * @constructor
  */
-class ImmersionBarObserver(
-    val onKeyboardChange: (
-        isPopup: Boolean,
-        keyboardHeight: Int
-    ) -> Unit = { _, _ -> }
-) : DefaultLifecycleObserver {
+class ImmersionBarObserver(val activity: ComponentActivity) : DefaultLifecycleObserver {
     override fun onStart(owner: LifecycleOwner) {
         super.onStart(owner)
-        owner::class.java.annotations.forEach { anno ->
+        activity::class.java.annotations.forEach { anno ->
             if (anno is ImmersionBars) {
-                val bar = if (owner is ComponentActivity)
-                    owner.immersionBar()
-                else if (owner is Fragment)
-                    owner.immersionBar()
-                else throw IllegalArgumentException("ImmersionBar must be used in ComponentActivity or Fragment")
-                bar.apply {
+                ImmersionBar.with(activity).apply {
                     if (anno.isFullScreen) {
                         hideBar(BarHide.FLAG_HIDE_BAR)
                             .init()
@@ -69,7 +62,14 @@ class ImmersionBarObserver(
                             .keyboardEnable(anno.keyboardEnable)
                             .keyboardMode(anno.keyboardMode)
                             .setOnKeyboardListener { isPopup, keyboardHeight ->
-                                onKeyboardChange(isPopup, keyboardHeight)
+                                try {
+                                    activity::class.java.getMethod(
+                                        "onKeyboardChange",
+                                        Boolean::class.java,
+                                        Int::class.java
+                                    ).invoke(activity, isPopup, keyboardHeight)
+                                } catch (e: Exception) {
+                                }
                             }
                             .init()
                     }
@@ -81,14 +81,8 @@ class ImmersionBarObserver(
 
     override fun onDestroy(owner: LifecycleOwner) {
         super.onDestroy(owner)
-        if (owner is ComponentActivity)
-            owner.immersionBar().destroy()
-        if (owner is Fragment)
-            owner.immersionBar().destroy()
+        ImmersionBar.with(activity).destroy()
     }
-
-    private fun ComponentActivity.immersionBar() = ImmersionBar.with(this)
-    private fun Fragment.immersionBar() = ImmersionBar.with(this)
 }
 
 /**
@@ -96,9 +90,12 @@ class ImmersionBarObserver(
  * @receiver LifecycleOwner
  * @param onKeyboardChange Function2<[@kotlin.ParameterName] Boolean, [@kotlin.ParameterName] Int, Unit>
  */
-fun LifecycleOwner.initImmersionBar(
-    onKeyboardChange: (
-        isPopup: Boolean,
-        keyboardHeight: Int
-    ) -> Unit = { _, _ -> }
-) = lifecycle.addObserver(ImmersionBarObserver(onKeyboardChange))
+fun Application.initImmersionBar() {
+    registerActivityLifecycleCallbacks(object : ActivityLifecycleCallbacks by noOpDelegate() {
+        override fun onActivityStarted(activity: Activity) {
+            if (activity is ComponentActivity) {
+                activity.lifecycle.addObserver(ImmersionBarObserver(activity))
+            }
+        }
+    })
+}

@@ -1,5 +1,3 @@
-import java.net.URI
-
 /**
  * 插件管理，相当于项目根目录 build.gradle 中的 buildscript{}#repositories{}
  * 里面是gradle脚本执行所需插件依赖

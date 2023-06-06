@@ -1,10 +1,8 @@
 package com.florizt.androidpro
 
 import android.app.Application
-import com.florizt.base.app.ScreenAdapter
-import com.florizt.base.app.initScreenAdapter
-import com.florizt.base.app.initAppStack
-import com.tencent.mmkv.MMKV
+import com.florizt.base.AndroidPro
+import com.florizt.base.repository.net.entity.ApiResponse
 
 /**
  * Created by wuwei
@@ -12,12 +10,26 @@ import com.tencent.mmkv.MMKV
  * 佛祖保佑       永无BUG
  * desc：
  */
-@ScreenAdapter
-class App: Application() {
+class App : Application() {
     override fun onCreate() {
         super.onCreate()
-        MMKV.initialize(this)
-        initScreenAdapter()
-        initAppStack()
+        AndroidPro.with(this)
+            .debug(BuildConfig.DEBUG)
+            .initUIStyle()
+            .initNetStyle<User<*>>(
+                "https://www.baidu.com",
+                "sasasa",
+                {
+                    ApiResponse(it.name, it.age, it.data)
+                },
+                arrayListOf()
+            )
+            .initCacheStyle()
     }
 }
+
+data class User<D>(
+    val name: String,
+    val age: String,
+    val data:D?
+)
