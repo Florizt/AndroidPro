@@ -72,7 +72,7 @@ fun MMKV.put(key: String, value: Any) {
         is Double -> encode(key, value)
         is ByteArray -> encode(key, value)
         is Parcelable -> encode(key, value)
-        else -> throw IllegalArgumentException("mmkv not support this type")
+        else -> error("mmkv not support this type")
     }
 }
 
@@ -91,7 +91,7 @@ inline fun <reified T> MMKV.get(key: String): T? {
         Int::class -> decodeInt(key) as T
         Double::class -> decodeDouble(key) as T
         ByteArray::class -> decodeBytes(key) as T
-        else -> throw IllegalArgumentException("mmkv not support this type")
+        else -> error("mmkv not support this type")
     }
 }
 

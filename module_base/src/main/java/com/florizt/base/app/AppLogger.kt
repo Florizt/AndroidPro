@@ -40,10 +40,6 @@ object AppLogger {
             LEVEL.E -> {
                 LogX.e(any)
             }
-
-            else -> {
-                LogX.s(any)
-            }
         }
     }
 
@@ -69,10 +65,6 @@ object AppLogger {
 
             LEVEL.E -> {
                 LogX.e(msg, args)
-            }
-
-            else -> {
-                LogX.s(msg, args)
             }
         }
     }

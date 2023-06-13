@@ -21,7 +21,7 @@ inline fun <reified V> intent(key: String? = null) = object : ReadWriteProperty<
     ): V {
         val k = key ?: property.name
         return thisRef.intent?.extras?.get(k) as V
-            ?: throw IllegalStateException("Property $k could not be read")
+            ?: error("Property $k could not be read")
     }
 
     override fun setValue(thisRef: Activity, property: KProperty<*>, value: V) {

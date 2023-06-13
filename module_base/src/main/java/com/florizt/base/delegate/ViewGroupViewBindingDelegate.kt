@@ -16,9 +16,7 @@ inline fun <reified VB : ViewBinding> ViewGroup.viewBinding() =
         private var binding: VB? = null
 
         override fun getValue(thisRef: ViewGroup, property: KProperty<*>): VB {
-            return binding?.run {
-                this
-            } ?: run {
+            return binding ?: run {
                 VB::class.java.getMethod(
                     "inflate",
                     LayoutInflater::class.java,
@@ -31,6 +29,8 @@ inline fun <reified VB : ViewBinding> ViewGroup.viewBinding() =
                         thisRef,
                         true
                     ) as VB
+                }.apply {
+                    binding = this
                 }
             }
         }

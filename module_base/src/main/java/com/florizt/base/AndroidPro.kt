@@ -61,7 +61,7 @@ object AndroidPro {
             initScreenAdapter(designWidthInDp, designHeightInDp)
             initAppStack(toForeground, toBackground)
             initImmersionBar()
-        } ?: throw IllegalArgumentException("first step is use with()")
+        } ?: error("first step is use with()")
         return this
     }
 
@@ -98,7 +98,7 @@ object AndroidPro {
     ): AndroidPro {
         application?.apply {
             MMKV.initialize(this, mmkvRootDir)
-        } ?: throw IllegalArgumentException("first step is use with()")
+        } ?: error("first step is use with()")
         return this
     }
 }

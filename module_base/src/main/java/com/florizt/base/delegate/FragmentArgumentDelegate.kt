@@ -12,7 +12,7 @@ import kotlin.reflect.KProperty
  * @return ReadWriteProperty<Fragment, T>
  */
 @JvmOverloads
-fun <V : Any> argument(key: String? = null) = object : ReadWriteProperty<Fragment, V> {
+fun <V> argument(key: String? = null) = object : ReadWriteProperty<Fragment, V> {
     @Suppress("UNCHECKED_CAST")
     override fun getValue(
         thisRef: Fragment,
@@ -20,7 +20,7 @@ fun <V : Any> argument(key: String? = null) = object : ReadWriteProperty<Fragmen
     ): V {
         val k = key ?: property.name
         return thisRef.arguments?.get(k) as? V
-            ?: throw IllegalStateException("Property $k could not be read")
+            ?: error("Property $k could not be read")
     }
 
     override fun setValue(

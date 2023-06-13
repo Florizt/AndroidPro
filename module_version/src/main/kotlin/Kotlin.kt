@@ -1,9 +1,7 @@
-
 object Kotlin {
     var kotlin_version = "1.8.0"
 
     val stdlib = "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
-    val serialization = "org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.1"
 
     object Coroutines {
         private const val coroutine_version = "1.6.2"

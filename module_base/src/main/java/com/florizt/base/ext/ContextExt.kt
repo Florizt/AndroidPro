@@ -52,3 +52,47 @@ inline fun safe(block: () -> Unit) {
         e.printStackTrace()
     }
 }
+
+/**
+ * 安全执行
+ * @param block Function0<Unit>
+ */
+@JvmOverloads
+inline fun safe(block: () -> Unit, finally: () -> Unit = {}) {
+    try {
+        block()
+    } catch (e: Exception) {
+        e.printStackTrace()
+    } finally {
+        finally()
+    }
+}
+
+/**
+ * 安全执行
+ * @param block Function0<Unit>
+ */
+inline fun <T> safe(block: () -> T, error: (Exception) -> T): T {
+    try {
+        return block()
+    } catch (e: Exception) {
+        e.printStackTrace()
+        return error(e)
+    }
+}
+
+/**
+ * 安全执行
+ * @param block Function0<Unit>
+ */
+@JvmOverloads
+inline fun <T> safe(block: () -> T, error: (Exception) -> T, finally: () -> Unit = {}): T {
+    try {
+        return block()
+    } catch (e: Exception) {
+        e.printStackTrace()
+        return error(e)
+    } finally {
+        finally()
+    }
+}

@@ -8,6 +8,7 @@ import androidx.activity.ComponentActivity
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import com.florizt.base.delegate.noOpDelegate
+import com.florizt.base.ext.safe
 import com.gyf.immersionbar.BarHide
 import com.gyf.immersionbar.ktx.immersionBar
 
@@ -62,13 +63,12 @@ class ImmersionBarObserver(val activity: ComponentActivity) : DefaultLifecycleOb
                         keyboardEnable(anno.keyboardEnable)
                         keyboardMode(anno.keyboardMode)
                         setOnKeyboardListener { isPopup, keyboardHeight ->
-                            try {
+                            safe {
                                 activity::class.java.getMethod(
                                     "onKeyboardChange",
                                     Boolean::class.java,
                                     Int::class.java
                                 ).invoke(activity, isPopup, keyboardHeight)
-                            } catch (e: Exception) {
                             }
                         }
                         init()

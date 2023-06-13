@@ -20,9 +20,7 @@ inline fun <reified VB : ViewBinding> ComponentActivity.viewBinding(): ReadOnlyP
         private var binding: VB? = null
 
         override fun getValue(thisRef: ComponentActivity, property: KProperty<*>): VB {
-            return binding?.run {
-                this
-            } ?: run {
+            return binding ?: run {
                 VB::class.java.getMethod("inflate", LayoutInflater::class.java).run {
                     invoke(null, thisRef.layoutInflater) as VB
                 }.apply {

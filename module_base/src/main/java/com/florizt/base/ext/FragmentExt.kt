@@ -14,7 +14,7 @@ import java.lang.reflect.Field
  * @param tag String?
  */
 fun DialogFragment.safeShow(manager: FragmentManager, tag: String?) {
-    try {
+    safe {
         val c = Class.forName("androidx.fragment.app.DialogFragment")
         val con = c.getConstructor()
         val obj = con.newInstance()
@@ -24,8 +24,6 @@ fun DialogFragment.safeShow(manager: FragmentManager, tag: String?) {
         val shownByMe: Field = c.getDeclaredField("mShownByMe")
         shownByMe.setAccessible(true)
         shownByMe.set(obj, false)
-    } catch (e: Exception) {
-        e.printStackTrace()
     }
     val ft: FragmentTransaction = manager.beginTransaction()
     ft.add(this, tag)

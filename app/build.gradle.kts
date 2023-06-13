@@ -1,7 +1,6 @@
 plugins {
     id("com.android.application")
     id("com.florizt.version")
-    kotlin("plugin.serialization").version("1.6.10")
 }
 
 android {

@@ -1,5 +1,6 @@
 package com.florizt.base.repository.net
 
+import com.florizt.base.ext.safe
 import com.florizt.base.repository.net.entity.ApiResponse
 import com.florizt.base.repository.net.entity.ResultException
 import com.florizt.base.repository.net.entity.ResultException.Companion.RESPONSEBODY_NONE_ERROR
@@ -48,40 +49,58 @@ class ApiResponseCall<T>(
         })
     }
 
-    private fun response(response: Response<T>): Response<ApiResponse<*>> = try {
-        if (response.isSuccessful) {
-            val body = response.body()
-            if (body != null) {
-                val t = mapper.invoke(body)
-                if (t.code == successCode) {
-                    t.isSuccess = true
-                    Response.success(t)
-                } else {
-                    Response.success(ApiResponse(t.code, t.msg, null))
-                }
-            } else {
-                Response.success(ApiResponse(RESPONSEBODY_NONE_ERROR.first, RESPONSEBODY_NONE_ERROR.second, null))
-            }
-        } else {
-            val error = response.errorBody()?.string()
-            if (error != null) {
-                try {
-                    val data = gson.fromJson(error, ApiResponse::class.java)
-                    Response.success(ApiResponse(data.code, data.msg, null))
-                } catch (e: Exception) {
-                    ResultException.handException(e).run {
-                        Response.success(ApiResponse(code, msg, null))
+    private fun response(response: Response<T>): Response<ApiResponse<*>> = safe(
+        block = {
+            if (response.isSuccessful) {
+                val body = response.body()
+                if (body != null) {
+                    val t = mapper.invoke(body)
+                    if (t.code == successCode) {
+                        t.isSuccess = true
+                        Response.success(t)
+                    } else {
+                        Response.success(ApiResponse(t.code, t.msg, null))
                     }
+                } else {
+                    Response.success(
+                        ApiResponse(
+                            RESPONSEBODY_NONE_ERROR.first,
+                            RESPONSEBODY_NONE_ERROR.second,
+                            null
+                        )
+                    )
                 }
             } else {
-                Response.success(ApiResponse(RESPONSEBODY_NONE_ERROR.first, RESPONSEBODY_NONE_ERROR.second, null))
+                val error = response.errorBody()?.string()
+                if (error != null) {
+                    safe(
+                        block = {
+                            val data = gson.fromJson(error, ApiResponse::class.java)
+                            Response.success(ApiResponse(data.code, data.msg, null))
+                        },
+                        error = {
+                            ResultException.handException(it).run {
+                                Response.success(ApiResponse(code, msg, null))
+                            }
+                        }
+                    )
+                } else {
+                    Response.success(
+                        ApiResponse(
+                            RESPONSEBODY_NONE_ERROR.first,
+                            RESPONSEBODY_NONE_ERROR.second,
+                            null
+                        )
+                    )
+                }
+            }
+        },
+        error = {
+            ResultException.handException(it).run {
+                Response.success(ApiResponse(code, msg, null))
             }
         }
-    } catch (e: Exception) {
-        ResultException.handException(e).run {
-            Response.success(ApiResponse(code, msg, null))
-        }
-    }
+    )
 
     override fun isExecuted(): Boolean = delegate.isExecuted
 

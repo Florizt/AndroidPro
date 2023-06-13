@@ -45,9 +45,7 @@ inline fun <reified VB : ViewBinding> Fragment.viewBinding() = object : ReadOnly
         if (binding != null && binding!!.root !== thisRef.view) {
             binding = null
         }
-        return binding?.run {
-            this
-        } ?: run {
+        return binding ?: run {
             val lifecycle = thisRef.viewLifecycleOwner.lifecycle
             if (!lifecycle.currentState.isAtLeast(Lifecycle.State.INITIALIZED)) {
                 error("Cannot access view bindings. View lifecycle is ${lifecycle.currentState}!")

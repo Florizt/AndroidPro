@@ -1,6 +1,8 @@
 package com.florizt.base.app
 
+import android.annotation.SuppressLint
 import android.app.Application
+import com.florizt.base.ext.safe
 
 /**
  * 管理全局Context
@@ -8,15 +10,14 @@ import android.app.Application
 object ContextWrapper {
     private var _context: Application? = null
     val context: Application
+        @SuppressLint("PrivateApi")
         get() = _context ?: run {
-            try {
-                val application = Class.forName("android.app.ActivityThread")
-                    .getMethod("currentApplication")
-                    .invoke(null) as Application
-                application.apply { _context = this }
-            } catch (ex: Exception) {
-                ex.printStackTrace()
-                throw IllegalArgumentException("ActivityThread init failed")
-            }
+            safe(
+                block = {
+                    (Class.forName("android.app.ActivityThread")
+                        .getMethod("currentApplication")
+                        .invoke(null) as Application).apply { _context = this }
+                },
+                error = { error("ActivityThread init failed") })
         }
 }

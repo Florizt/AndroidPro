@@ -18,9 +18,7 @@ inline fun <reified VM : ViewModel> ComponentActivity.viewModelsLifecycle() =
         private var viewmodel: VM? = null
 
         override fun getValue(thisRef: ComponentActivity, property: KProperty<*>): VM {
-            return viewmodel?.run {
-                this
-            } ?: run {
+            return viewmodel ?: run {
                 viewModels<VM>().run {
                     value.apply {
                         viewmodel = this

@@ -32,7 +32,7 @@ object RetrofitFactory {
      * retrofit对象
      */
     val retrofit: Retrofit
-        get() = _retrofit ?: throw IllegalArgumentException("retrofit init failed, please load initRetrofit()")
+        get() = _retrofit ?: error("retrofit init failed, please load initRetrofit()")
 
     /**
      * retrofit初始化

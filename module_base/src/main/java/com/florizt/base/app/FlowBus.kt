@@ -2,6 +2,7 @@ package com.florizt.base.app
 
 import android.util.Log
 import androidx.lifecycle.*
+import com.florizt.base.ext.safe
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -12,23 +13,26 @@ import kotlinx.coroutines.launch
  * FlowBus消息总线
  */
 object FlowBus {
-    private const val TAG = "FlowBus"
     private val busMap = mutableMapOf<String, EventBus<*>>()
     private val busStickMap = mutableMapOf<String, StickEventBus<*>>()
 
+    @Suppress("UNCHECKED_CAST")
     @Synchronized
     fun <T> with(key: String): EventBus<T> {
         return (busMap[key] ?: run {
-            busMap[key] = EventBus<T>(key)
-            busMap[key]
+            EventBus<T>(key).apply {
+                busMap[key] = this
+            }
         }) as EventBus<T>
     }
 
+    @Suppress("UNCHECKED_CAST")
     @Synchronized
     fun <T> withStick(key: String): StickEventBus<T> {
         return (busStickMap[key] ?: run {
-            busStickMap[key] = StickEventBus<T>(key)
-            busStickMap[key]
+            StickEventBus<T>(key).apply {
+                busStickMap[key] = this
+            }
         }) as StickEventBus<T>
     }
 
@@ -36,7 +40,7 @@ object FlowBus {
     open class EventBus<T>(private val key: String) : DefaultLifecycleObserver {
 
         //私有对象用于发送消息
-        private val _events: MutableSharedFlow<T> by lazy {
+        protected val _events: MutableSharedFlow<T> by lazy {
             obtainEvent()
         }
 
@@ -47,17 +51,10 @@ object FlowBus {
             MutableSharedFlow(0, 1, BufferOverflow.DROP_OLDEST)
 
         //主线程接收数据
-        fun register(lifecycleOwner: LifecycleOwner, action: (t: T) -> Unit) {
+        fun regist(lifecycleOwner: LifecycleOwner, action: (T) -> Unit) {
             lifecycleOwner.lifecycle.addObserver(this)
             lifecycleOwner.lifecycleScope.launch {
-                events.collect {
-                    try {
-                        action(it)
-                    } catch (e: Exception) {
-                        e.printStackTrace()
-                        Log.e(TAG, "FlowBus - Error:$e")
-                    }
-                }
+                events.collect { safe { action(it) } }
             }
         }
 
@@ -76,16 +73,19 @@ object FlowBus {
         //自动销毁
         override fun onDestroy(owner: LifecycleOwner) {
             super.onDestroy(owner)
-            Log.w(TAG, "FlowBus - 自动onDestroy")
-            val subscriptCount = _events.subscriptionCount.value
-            if (subscriptCount <= 0)
+            if (_events.subscriptionCount.value <= 0)
                 busMap.remove(key)
         }
     }
 
-    class StickEventBus<T>(key: String) : EventBus<T>(key) {
+    class StickEventBus<T>(private val key: String) : EventBus<T>(key) {
         override fun obtainEvent(): MutableSharedFlow<T> =
             MutableSharedFlow(1, 1, BufferOverflow.DROP_OLDEST)
+
+        override fun onDestroy(owner: LifecycleOwner) {
+            if (_events.subscriptionCount.value <= 0)
+                busStickMap.remove(key)
+        }
     }
 
 }

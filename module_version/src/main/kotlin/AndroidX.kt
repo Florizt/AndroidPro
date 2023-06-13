@@ -1,7 +1,6 @@
 
 object AndroidX {
     const val appCompat = "androidx.appcompat:appcompat:1.5.1"
-    const val startup = "androidx.startup:startup-runtime:1.0.0"
     const val constraintLayout = "androidx.constraintlayout:constraintlayout:2.1.2"
     const val recyclerView = "androidx.recyclerview:recyclerview:1.2.1"
     const val recyclerView_selection = "androidx.recyclerview:recyclerview-selection:1.1.0"
@@ -47,11 +46,5 @@ object AndroidX {
     object Work {
         private const val work_version = "2.7.1"
         const val runtime = "androidx.work:work-runtime-ktx:$work_version"
-    }
-
-    object DataStore {
-        private const val datasource_version = "1.0.0"
-        const val core = "androidx.datastore:datastore-core:$datasource_version"
-        const val preferences = "androidx.datastore:datastore-preferences:$datasource_version"
     }
 }

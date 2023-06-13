@@ -4,6 +4,7 @@ import android.app.Activity
 import android.app.Application
 import android.os.Bundle
 import com.florizt.base.delegate.noOpDelegate
+import com.florizt.base.ext.safe
 import java.lang.ref.SoftReference
 import java.util.*
 
@@ -97,12 +98,14 @@ object AppStackManager {
      */
     @JvmStatic
     fun appExit() {
-        try {
-            finishAllActivity()
-        } catch (e: Exception) {
-            activityStack.get()?.run { clear() }
-            e.printStackTrace()
-        }
+        safe(
+            block = {
+                finishAllActivity()
+            },
+            error = {
+                activityStack.get()?.clear()
+            }
+        )
     }
 
     /**

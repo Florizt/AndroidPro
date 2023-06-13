@@ -1,7 +1,5 @@
-
 object ThirdParty {
-    const val glide = "com.github.bumptech.glide:glide:4.10.0"
-    const val glideCompiler = "com.github.bumptech.glide:compiler:4.10.0"
+    const val coil = "io.coil-kt:coil:2.4.0"
 
     // 沉浸式状态栏
     const val immersionbar = "com.geyifeng.immersionbar:immersionbar:3.2.2"

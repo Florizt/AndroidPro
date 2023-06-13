@@ -7,6 +7,7 @@ import android.util.Base64
 import com.florizt.base.app.ContextWrapper
 import com.florizt.base.ext.decrypt3DES
 import com.florizt.base.ext.encrypt3DES
+import com.florizt.base.ext.safe
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.IOException
@@ -95,48 +96,47 @@ fun Context.getSharedPreferences(): SharedPreferences =
 fun SharedPreferences.put(
     key: String,
     value: Any,
-    psw: String? = null
-): Boolean {
+    psw: String? = null,
+) {
     val editor = edit()
     var bos: ByteArrayOutputStream? = null
     var oos: ObjectOutputStream? = null
-    try {
-        val newValue = when (value) {
-            is String,
-            is Long,
-            is Boolean,
-            is Float,
-            is Int -> value.toString()
 
-            is Serializable -> {
-                bos = ByteArrayOutputStream()
-                oos = ObjectOutputStream(bos)
-                oos.writeObject(value)
-                val bytes: ByteArray = bos.toByteArray()
-                Base64.encodeToString(bytes, Base64.DEFAULT)
+    safe(
+        block = {
+            val newValue = when (value) {
+                is String,
+                is Long,
+                is Boolean,
+                is Float,
+                is Int,
+                -> value.toString()
+
+                is Serializable -> {
+                    bos = ByteArrayOutputStream()
+                    oos = ObjectOutputStream(bos)
+                    oos!!.writeObject(value)
+                    val bytes: ByteArray = bos!!.toByteArray()
+                    Base64.encodeToString(bytes, Base64.DEFAULT)
+                }
+
+                else -> error("SharedPreferences not support this type")
             }
 
-            else -> throw IllegalArgumentException("SharedPreferences not support this type")
+            editor.putString(key, psw?.run {
+                newValue.encrypt3DES(this)
+            } ?: run {
+                newValue
+            })
+        },
+        finally = {
+            SharedPreferencesCompat.apply(editor)
+            safe {
+                bos?.close()
+                oos?.close()
+            }
         }
-
-        editor.putString(key, psw?.run {
-            newValue.encrypt3DES(this)
-        } ?: run {
-            newValue
-        })
-        return true
-    } catch (e: Throwable) {
-        e.printStackTrace()
-        return false
-    } finally {
-        SharedPreferencesCompat.apply(editor)
-        try {
-            bos?.close()
-            oos?.close()
-        } catch (e: IOException) {
-            e.printStackTrace()
-        }
-    }
+    )
 }
 
 /**
@@ -149,28 +149,28 @@ fun SharedPreferences.put(
 @JvmOverloads
 inline fun <reified T> SharedPreferences.get(
     key: String,
-    psw: String? = null
+    psw: String? = null,
 ): T? {
-    return try {
-        getString(key, null)?.run {
-            val newValue: String = psw?.let {
-                this.decrypt3DES(it)
-            } ?: run { this }
-            when (T::class) {
-                String::class -> newValue as T
-                Long::class -> newValue.toLong() as T
-                Boolean::class -> newValue.toBoolean() as T
-                Float::class -> newValue.toFloat() as T
-                Int::class -> newValue.toInt() as T
-                else -> throw IllegalArgumentException("SharedPreferences not support this type")
+    return safe(
+        block = {
+            getString(key, null)?.run {
+                val newValue: String = psw?.let {
+                    this.decrypt3DES(it)
+                } ?: run { this }
+                when (T::class) {
+                    String::class -> newValue as T
+                    Long::class -> newValue.toLong() as T
+                    Boolean::class -> newValue.toBoolean() as T
+                    Float::class -> newValue.toFloat() as T
+                    Int::class -> newValue.toInt() as T
+                    else -> error("SharedPreferences not support this type")
+                }
+            } ?: run {
+                getDefaultValue()
             }
-        } ?: run {
-            getDefaultValue()
-        }
-    } catch (e: Throwable) {
-        e.printStackTrace()
-        getDefaultValue()
-    }
+        },
+        error = { getDefaultValue() }
+    )
 }
 
 /**
@@ -183,34 +183,33 @@ inline fun <reified T> SharedPreferences.get(
 @JvmOverloads
 inline fun <reified T : Serializable> SharedPreferences.getSerializable(
     key: String,
-    psw: String? = null
+    psw: String? = null,
 ): T? {
     var bis: ByteArrayInputStream? = null
     var ois: ObjectInputStream? = null
-    return try {
-        getString(key, null)?.run {
-            val newValue: String = psw?.let {
-                this.decrypt3DES(it)
-            } ?: run { this }
-            val bytes =
-                Base64.decode(newValue, Base64.DEFAULT)
-            bis = ByteArrayInputStream(bytes)
-            ois = ObjectInputStream(bis)
-            ois?.readObject() as T
-        } ?: run {
-            getDefaultValue()
+    return safe(
+        block = {
+            getString(key, null)?.run {
+                val newValue: String = psw?.let {
+                    this.decrypt3DES(it)
+                } ?: run { this }
+                val bytes =
+                    Base64.decode(newValue, Base64.DEFAULT)
+                bis = ByteArrayInputStream(bytes)
+                ois = ObjectInputStream(bis)
+                ois?.readObject() as T
+            } ?: run {
+                getDefaultValue()
+            }
+        },
+        error = { getDefaultValue() },
+        finally = {
+            safe {
+                bis?.close()
+                ois?.close()
+            }
         }
-    } catch (e: Throwable) {
-        e.printStackTrace()
-        getDefaultValue()
-    } finally {
-        try {
-            bis?.close()
-            ois?.close()
-        } catch (e: IOException) {
-            e.printStackTrace()
-        }
-    }
+    )
 }
 
 /**
@@ -224,9 +223,7 @@ inline fun <reified T> getDefaultValue(): T? {
         Boolean::class -> false as T
         Float::class -> 0f as T
         Int::class -> 0 as T
-        else -> {
-            null
-        }
+        else -> null
     }
 }
 
@@ -234,16 +231,12 @@ inline fun <reified T> getDefaultValue(): T? {
  * 移除某个key值已经对应的值
  */
 @SuppressLint("CommitPrefEdits")
-fun SharedPreferences.remove(key: String): Boolean {
-    try {
+fun SharedPreferences.remove(key: String) {
+    safe {
         edit().apply {
             remove(key)
             SharedPreferencesCompat.apply(this)
         }
-        return true
-    } catch (e: Exception) {
-        e.printStackTrace()
-        return false
     }
 }
 
@@ -252,9 +245,11 @@ fun SharedPreferences.remove(key: String): Boolean {
  */
 @SuppressLint("CommitPrefEdits")
 fun SharedPreferences.clear() {
-    edit().apply {
-        clear()
-        SharedPreferencesCompat.apply(this)
+    safe {
+        edit().apply {
+            clear()
+            SharedPreferencesCompat.apply(this)
+        }
     }
 }
 
@@ -268,27 +263,19 @@ private object SharedPreferencesCompat {
      * 反射查找apply的方法
      */
     private fun findApplyMethod(): Method? {
-        try {
-            val clz: Class<*> = SharedPreferences.Editor::class.java
-            return clz.getMethod("apply")
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
-        return null
+        return safe(
+            block = {
+                SharedPreferences.Editor::class.java.getMethod("apply")
+            },
+            error = { null }
+        )
     }
 
     /**
      * 如果找到则使用apply执行，否则使用commit
      */
     fun apply(editor: SharedPreferences.Editor) {
-        try {
-            if (sApplyMethod != null) {
-                sApplyMethod.invoke(editor)
-                return
-            }
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
+        safe { sApplyMethod?.invoke(editor) }
         editor.commit()
     }
 }

@@ -26,6 +26,6 @@ fun <T> Bundle.put(key: String, value: T) {
         is Bundle -> putBundle(key, value)
         is Parcelable -> putParcelable(key, value)
         is Serializable -> putSerializable(key, value)
-        else -> throw IllegalStateException("Type of property $key is not supported")
+        else -> error("Type of property $key is not supported")
     }
 }
