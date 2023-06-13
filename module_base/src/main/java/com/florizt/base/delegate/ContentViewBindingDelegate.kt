@@ -15,7 +15,7 @@ import kotlin.reflect.KProperty
  * @receiver ComponentActivity
  * @return ReadOnlyProperty<ComponentActivity, T>
  */
-inline fun <reified VB : ViewBinding> ComponentActivity.viewBinding(): ReadOnlyProperty<ComponentActivity, Any> =
+inline fun <reified VB : ViewBinding> ComponentActivity.viewBinding(): ReadOnlyProperty<ComponentActivity, VB> =
     object : ReadOnlyProperty<ComponentActivity, VB> {
         private var binding: VB? = null
 

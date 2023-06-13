@@ -130,6 +130,7 @@ class VersionPlugin : Plugin<Project> {
             add(implementation, ThirdParty.glide)
             add(kapt, ThirdParty.glideCompiler)
             add(implementation, ThirdParty.immersionbar)
+            add(implementation, ThirdParty.immersionbarKtx)
             add(implementation, ThirdParty.autosize)
             add(implementation, ThirdParty.backgroundLibrary)
             add(implementation, ThirdParty.mmkv)

@@ -8,8 +8,8 @@ import androidx.activity.ComponentActivity
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import com.florizt.base.delegate.noOpDelegate
-import com.gyf.barlibrary.BarHide
-import com.gyf.barlibrary.ImmersionBar
+import com.gyf.immersionbar.BarHide
+import com.gyf.immersionbar.ktx.immersionBar
 
 /**
  * 状态栏、导航栏、软键盘等一系列ui配置
@@ -33,7 +33,7 @@ annotation class ImmersionBars(
     val navigationBarColor: String = "#00ffffff",
     val hideNavigationBar: Boolean = false,
     val keyboardEnable: Boolean = true,
-    val keyboardMode: Int = WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE
+    val keyboardMode: Int = WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE,
 )
 
 /**
@@ -46,42 +46,37 @@ class ImmersionBarObserver(val activity: ComponentActivity) : DefaultLifecycleOb
         super.onStart(owner)
         activity::class.java.annotations.forEach { anno ->
             if (anno is ImmersionBars) {
-                ImmersionBar.with(activity).apply {
+                activity.immersionBar {
                     if (anno.isFullScreen) {
                         hideBar(BarHide.FLAG_HIDE_BAR)
-                            .init()
+                        init()
                     } else {
                         fitsSystemWindows(anno.fitsSystemWindows)
-                            .statusBarDarkFont(anno.statusBarDarkFont, 0.2f)
-                            .statusBarColor(anno.statusBarColor)
-                            .navigationBarColor(anno.navigationBarColor).also {
-                                if (anno.hideNavigationBar) {
-                                    it.hideBar(BarHide.FLAG_HIDE_NAVIGATION_BAR)
-                                }
+                        statusBarDarkFont(anno.statusBarDarkFont, 0.2f)
+                        statusBarColor(anno.statusBarColor)
+                        navigationBarColor(anno.navigationBarColor).also {
+                            if (anno.hideNavigationBar) {
+                                it.hideBar(BarHide.FLAG_HIDE_NAVIGATION_BAR)
                             }
-                            .keyboardEnable(anno.keyboardEnable)
-                            .keyboardMode(anno.keyboardMode)
-                            .setOnKeyboardListener { isPopup, keyboardHeight ->
-                                try {
-                                    activity::class.java.getMethod(
-                                        "onKeyboardChange",
-                                        Boolean::class.java,
-                                        Int::class.java
-                                    ).invoke(activity, isPopup, keyboardHeight)
-                                } catch (e: Exception) {
-                                }
+                        }
+                        keyboardEnable(anno.keyboardEnable)
+                        keyboardMode(anno.keyboardMode)
+                        setOnKeyboardListener { isPopup, keyboardHeight ->
+                            try {
+                                activity::class.java.getMethod(
+                                    "onKeyboardChange",
+                                    Boolean::class.java,
+                                    Int::class.java
+                                ).invoke(activity, isPopup, keyboardHeight)
+                            } catch (e: Exception) {
                             }
-                            .init()
+                        }
+                        init()
                     }
                 }
                 return@forEach
             }
         }
-    }
-
-    override fun onDestroy(owner: LifecycleOwner) {
-        super.onDestroy(owner)
-        ImmersionBar.with(activity).destroy()
     }
 }
 
@@ -98,4 +93,19 @@ fun Application.initImmersionBar() {
             }
         }
     })
+}
+
+/**
+ * 软键盘监听
+ */
+interface KeyboardChangeObserve {
+    /**
+     * 软键盘监听回调
+     * @param isPopup Boolean 是否弹起
+     * @param keyboardHeight Int 软键盘高度
+     */
+    fun onKeyboardChange(
+        isPopup: Boolean,
+        keyboardHeight: Int,
+    )
 }

@@ -4,7 +4,8 @@ object ThirdParty {
     const val glideCompiler = "com.github.bumptech.glide:compiler:4.10.0"
 
     // 沉浸式状态栏
-    const val immersionbar = "com.gyf.immersionbar:immersionbar:2.3.3"
+    const val immersionbar = "com.geyifeng.immersionbar:immersionbar:3.2.2"
+    const val immersionbarKtx = "com.geyifeng.immersionbar:immersionbar-ktx:3.2.2"
 
     // 适配
     const val autosize = "me.jessyan:autosize:1.1.2"

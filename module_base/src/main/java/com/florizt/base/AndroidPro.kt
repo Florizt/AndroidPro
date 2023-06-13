@@ -16,13 +16,17 @@ import okhttp3.Interceptor
 object AndroidPro {
     private var application: Application? = null
 
+    fun Application.androidPro(block: AndroidPro.() -> Unit) {
+        with(this).apply { block() }
+    }
+
     /**
      * 初始化Application
      * @param application Application
      * @return AndroidPro
      */
     @JvmStatic
-    fun with(application: Application): AndroidPro {
+    private fun with(application: Application): AndroidPro {
         this.application = application
         return this
     }

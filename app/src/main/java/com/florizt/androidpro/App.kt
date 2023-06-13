@@ -2,6 +2,7 @@ package com.florizt.androidpro
 
 import android.app.Application
 import com.florizt.base.AndroidPro
+import com.florizt.base.AndroidPro.androidPro
 import com.florizt.base.repository.net.entity.ApiResponse
 
 /**
@@ -13,10 +14,10 @@ import com.florizt.base.repository.net.entity.ApiResponse
 class App : Application() {
     override fun onCreate() {
         super.onCreate()
-        AndroidPro.with(this)
-            .debug(BuildConfig.DEBUG)
-            .initUIStyle()
-            .initNetStyle<User<*>>(
+        androidPro {
+            debug(BuildConfig.DEBUG)
+            initUIStyle(320, 480)
+            initNetStyle<User<*>>(
                 "https://www.baidu.com",
                 "sasasa",
                 {
@@ -24,12 +25,13 @@ class App : Application() {
                 },
                 arrayListOf()
             )
-            .initCacheStyle()
+            initCacheStyle()
+        }
     }
 }
 
 data class User<D>(
     val name: String,
     val age: String,
-    val data:D?
+    val data: D?,
 )

@@ -77,7 +77,7 @@ inline fun <Local, Remote> networkBoundResourceNoCache(
  * @param cache Function0<Flow<Local?>> 缓存请求
  * @return Flow<Resource<Local & Any>>
  */
-inline fun <Local, Remote> networkBoundResourceOnlyCache(
+inline fun <Local> networkBoundResourceOnlyCache(
     crossinline cache: () -> Flow<Local?>,
 ) = flow {
     emit(Resource.loading())

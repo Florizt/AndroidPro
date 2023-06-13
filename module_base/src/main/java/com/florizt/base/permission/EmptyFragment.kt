@@ -12,10 +12,10 @@ import com.florizt.base.delegate.argument
 
 /**
  * 权限请求透明Fragment
- * @property permissions Array<String>
- * @property granted Function0<Unit>
- * @property rationale Function1<MutableList<String>, Unit>
- * @property denied Function1<MutableList<String>, Unit>
+ * @property permissions Array<String> 权限
+ * @property granted Function0<Unit> 请求通过回调
+ * @property rationale Function1<MutableList<String>, Unit> 请求拒绝且不再询问回调
+ * @property denied Function1<MutableList<String>, Unit> 请求拒绝回调
  * @property launcher ActivityResultLauncher<Array<String>>?
  */
 class EmptyFragment : Fragment() {
