@@ -45,6 +45,7 @@ inline fun <reified AC : Activity> Context.startActivity(
  * 安全执行
  * @param block Function0<Unit>
  */
+@JvmName(name = "safe0")
 inline fun safe(block: () -> Unit) {
     try {
         block()
@@ -57,6 +58,7 @@ inline fun safe(block: () -> Unit) {
  * 安全执行
  * @param block Function0<Unit>
  */
+@JvmName(name = "safe1")
 @JvmOverloads
 inline fun safe(block: () -> Unit, finally: () -> Unit = {}) {
     try {
@@ -72,6 +74,7 @@ inline fun safe(block: () -> Unit, finally: () -> Unit = {}) {
  * 安全执行
  * @param block Function0<Unit>
  */
+@JvmName(name = "safe2")
 inline fun <T> safe(block: () -> T, error: (Exception) -> T): T {
     try {
         return block()
@@ -85,6 +88,7 @@ inline fun <T> safe(block: () -> T, error: (Exception) -> T): T {
  * 安全执行
  * @param block Function0<Unit>
  */
+@JvmName(name = "safe3")
 @JvmOverloads
 inline fun <T> safe(block: () -> T, error: (Exception) -> T, finally: () -> Unit = {}): T {
     try {
