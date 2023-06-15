@@ -33,70 +33,11 @@ fun Int.string(vararg formatArgs: String) =
 /**
  * 启动Activity
  */
+@JvmOverloads
 inline fun <reified AC : Activity> Context.startActivity(
-    args: Intent.() -> Unit,
+    args: Intent.() -> Unit = {},
 ) {
     startActivity(Intent(this, AC::class.java).apply {
         args()
     })
-}
-
-/**
- * 安全执行
- * @param block Function0<Unit>
- */
-@JvmName(name = "safe0")
-inline fun safe(block: () -> Unit) {
-    try {
-        block()
-    } catch (e: Exception) {
-        e.printStackTrace()
-    }
-}
-
-/**
- * 安全执行
- * @param block Function0<Unit>
- */
-@JvmName(name = "safe1")
-@JvmOverloads
-inline fun safe(block: () -> Unit, finally: () -> Unit = {}) {
-    try {
-        block()
-    } catch (e: Exception) {
-        e.printStackTrace()
-    } finally {
-        finally()
-    }
-}
-
-/**
- * 安全执行
- * @param block Function0<Unit>
- */
-@JvmName(name = "safe2")
-inline fun <T> safe(block: () -> T, error: (Exception) -> T): T {
-    try {
-        return block()
-    } catch (e: Exception) {
-        e.printStackTrace()
-        return error(e)
-    }
-}
-
-/**
- * 安全执行
- * @param block Function0<Unit>
- */
-@JvmName(name = "safe3")
-@JvmOverloads
-inline fun <T> safe(block: () -> T, error: (Exception) -> T, finally: () -> Unit = {}): T {
-    try {
-        return block()
-    } catch (e: Exception) {
-        e.printStackTrace()
-        return error(e)
-    } finally {
-        finally()
-    }
 }

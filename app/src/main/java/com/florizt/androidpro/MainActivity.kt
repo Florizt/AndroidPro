@@ -17,7 +17,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding.iv.load(R.mipmap.ic_launcher){
+        binding.iv.load(R.mipmap.ic_launcher) {
             placeholder(R.drawable.ic_launcher_background)
             transformations(CircleCropTransformation())
         }
