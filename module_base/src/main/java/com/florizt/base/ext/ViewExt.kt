@@ -108,15 +108,18 @@ inline fun ScrollView.scrollChanged(crossinline scrollChanged: (View, Int, Int, 
 }
 
 /**
- * view是否需要获取焦点
+ * 获取焦点
  */
-fun View.focus(focus: Boolean) {
-    if (focus) {
-        isFocusableInTouchMode = true
-        requestFocus()
-    } else {
-        clearFocus()
-    }
+fun View.focus() {
+    isFocusableInTouchMode = true
+    requestFocus()
+}
+
+/**
+ * 清除焦点
+ */
+fun View.unfocus() {
+    clearFocus()
 }
 
 /**
@@ -138,13 +141,13 @@ fun View.invisible() {
     visibility = View.INVISIBLE
 }
 
-fun View.width(w: Int) {
+infix fun View.width(w: Int) {
     layoutParams = layoutParams.apply {
         width = w
     }
 }
 
-fun View.height(h: Int) {
+infix fun View.height(h: Int) {
     layoutParams = layoutParams.apply {
         height = h
     }
@@ -157,7 +160,7 @@ fun View.widthHeight(w: Int, h: Int) {
     }
 }
 
-fun View.marginTop(margin: Int) {
+infix fun View.marginTop(margin: Int) {
     if (layoutParams is MarginLayoutParams) {
         layoutParams = (layoutParams as MarginLayoutParams).apply {
             topMargin = margin
@@ -165,7 +168,7 @@ fun View.marginTop(margin: Int) {
     }
 }
 
-fun View.marginBottom(margin: Int) {
+infix fun View.marginBottom(margin: Int) {
     if (layoutParams is MarginLayoutParams) {
         layoutParams = (layoutParams as MarginLayoutParams).apply {
             bottomMargin = margin
@@ -173,7 +176,7 @@ fun View.marginBottom(margin: Int) {
     }
 }
 
-fun View.marginStart(margin: Int) {
+infix fun View.marginStart(margin: Int) {
     if (layoutParams is MarginLayoutParams) {
         layoutParams = (layoutParams as MarginLayoutParams).apply {
             leftMargin = margin
@@ -181,7 +184,7 @@ fun View.marginStart(margin: Int) {
     }
 }
 
-fun View.marginEnd(margin: Int) {
+infix fun View.marginEnd(margin: Int) {
     if (layoutParams is MarginLayoutParams) {
         layoutParams = (layoutParams as MarginLayoutParams).apply {
             rightMargin = margin
@@ -189,28 +192,36 @@ fun View.marginEnd(margin: Int) {
     }
 }
 
-fun View.paddingTop(padding: Int) {
+infix fun View.paddingTop(padding: Int) {
     setPadding(paddingLeft, padding, paddingRight, paddingBottom)
 }
 
-fun View.paddingBottom(padding: Int) {
+infix fun View.paddingBottom(padding: Int) {
     setPadding(paddingLeft, paddingTop, paddingRight, padding)
 }
 
-fun View.paddingStart(padding: Int) {
+infix fun View.paddingStart(padding: Int) {
     setPadding(padding, paddingTop, paddingRight, paddingBottom)
 }
 
-fun View.paddingEnd(padding: Int) {
+infix fun View.paddingEnd(padding: Int) {
     setPadding(paddingLeft, paddingTop, padding, paddingBottom)
 }
 
-fun View.selected(selected: Boolean) {
-    isSelected = selected
+fun View.selected() {
+    isSelected = true
 }
 
-fun View.enable(enable: Boolean) {
-    isEnabled = enable
+fun View.unselected() {
+    isSelected = false
+}
+
+fun View.enable() {
+    isEnabled = true
+}
+
+fun View.disable() {
+    isEnabled = false
 }
 
 fun TextView.movementMethod() {

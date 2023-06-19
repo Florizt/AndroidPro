@@ -9,5 +9,4 @@ import androidx.lifecycle.ViewModel
  * 佛祖保佑       永无BUG
  * desc：
  */
-class MainViewModel : ViewModel(),DefaultLifecycleObserver {
-}
+class MainViewModel : ViewModel(), DefaultLifecycleObserver

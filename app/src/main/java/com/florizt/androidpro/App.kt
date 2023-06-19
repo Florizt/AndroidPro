@@ -1,7 +1,6 @@
 package com.florizt.androidpro
 
 import android.app.Application
-import com.florizt.base.AndroidPro
 import com.florizt.base.AndroidPro.androidPro
 import com.florizt.base.repository.net.entity.ApiResponse
 

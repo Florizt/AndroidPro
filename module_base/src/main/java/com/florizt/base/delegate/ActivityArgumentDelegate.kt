@@ -3,7 +3,6 @@ package com.florizt.base.delegate
 import android.app.Activity
 import android.os.Bundle
 import com.florizt.base.ext.put
-import kotlin.properties.ReadOnlyProperty
 import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.KProperty
 
