@@ -13,29 +13,23 @@ import androidx.appcompat.widget.SwitchCompat
 import androidx.core.view.forEach
 import androidx.core.view.marginTop
 import androidx.recyclerview.widget.*
-
-/**
- * 点击事件
- * @receiver View
- * @param click Function0<Any?>
- * @param throttleFirst Boolean 是否设置防抖动，默认true
- */
-@JvmOverloads
-inline fun View.click(throttleFirst: Boolean = true, crossinline click: () -> Unit) {
-    val minTime = 500L
-    var lastTime = 0L
-    setOnClickListener {
-        val tmpTime = System.currentTimeMillis()
-        if (throttleFirst) {
-            if (tmpTime - lastTime > minTime) {
-                click()
-                lastTime = tmpTime
-            }
-        } else {
-            click()
-        }
-    }
-}
+import com.florizt.base.delegate.noOpDelegate
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
+import kotlin.coroutines.CoroutineContext
 
 /**
  * 长按事件
@@ -50,30 +44,79 @@ inline fun View.longClick(crossinline longClick: () -> Unit) {
 }
 
 /**
- * EditText文本监听
+ * 点击防抖
+ * @receiver View
+ * @param thresholdMillis Long 防抖间隔，默认500ms
+ * @param dispatcher CoroutineDispatcher 事件执行线程，默认主线程
+ * @param scope CoroutineScope 作用域
+ * @param block Function0<Unit> 执行体
+ * @return Job
+ */
+@OptIn(FlowPreview::class)
+@JvmOverloads
+inline fun View.clickFlow(
+    thresholdMillis: Long = 500L,
+    dispatcher: CoroutineDispatcher = Dispatchers.Main,
+    scope: CoroutineScope,
+    crossinline block: () -> Unit,
+) = callbackFlow {
+    setOnClickListener { trySend(Unit) }
+    awaitClose { setOnClickListener(null) }
+}.throttleFirst(thresholdMillis)
+    .onEach { block() }
+    .flowOn(dispatcher)
+    .launchIn(scope)
+
+@FlowPreview
+fun <T> Flow<T>.throttleFirst(thresholdMillis: Long): Flow<T> = flow {
+    var lastTime = 0L
+    collect {
+        val currentTime = System.currentTimeMillis()
+        if (currentTime - lastTime > thresholdMillis) {
+            lastTime = currentTime
+            emit(it)
+        }
+    }
+}
+
+/**
+ * 输入框限流（搜索联想场景适用）
  * @receiver EditText
- * @param textChanged Function4<CharSequence, Int, Int, Int, Any?>
+ * @param timeoutMillis Long 指定时间内的值只接收最新的一个，其他的过滤掉，默认400ms
+ * @param scope CoroutineScope 作用域
+ * @param textChange Function1<String, Unit> 文本改变状态，包含空状态，适用于输入框清空按钮显示逻辑
+ * @param fetch Function1<String, Flow<T>> 当文本不为空该处理的逻辑，如网络请求进行搜索联想
+ * @param result Function1<T, Unit> fetch执行后的结果
+ * @return Job
  */
 @JvmOverloads
-fun EditText.textChanged(
-    beforeTextChanged: ((CharSequence, Int, Int, Int) -> Unit)? = null,
-    textChanged: ((CharSequence, Int, Int, Int) -> Unit)? = null,
-    afterTextChanged: ((Editable) -> Unit)? = null,
-) {
-    addTextChangedListener(object : TextWatcher {
-        override fun beforeTextChanged(charSequence: CharSequence, i: Int, i1: Int, i2: Int) {
-            beforeTextChanged?.invoke(charSequence, i, i1, i2)
+@OptIn(FlowPreview::class, ExperimentalCoroutinesApi::class)
+inline fun <T> EditText.textChangeFlow(
+    timeoutMillis: Long = 400L,
+    scope: CoroutineScope,
+    crossinline textChange: (String) -> Unit = {},
+    crossinline fetch: (String) -> Flow<T>,
+    crossinline result: (T) -> Unit,
+) = callbackFlow<String> {
+    val watcher = object : TextWatcher by noOpDelegate() {
+        override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
+            s?.let { trySend(it.toString()) }
         }
+    }
+    addTextChangedListener(watcher)
+    awaitClose { removeTextChangedListener(watcher) }
+}.debounce(timeoutMillis)
+    .onEach { textChange(it) }
+    .flowOn(Dispatchers.Main)
+    .filter { it.isNotEmpty() }
+    .flatMapLatest { fetch(it) }
+    .flowOn(Dispatchers.IO)
+    .onEach { result(it) }
+    .launchIn(scope)
 
-        override fun onTextChanged(text: CharSequence, i: Int, i1: Int, i2: Int) {
-            textChanged?.invoke(text, i, i1, i2)
-        }
 
-        override fun afterTextChanged(editable: Editable) {
-            afterTextChanged?.invoke(editable)
-        }
-    })
-}
+
+
 
 /**
  * CheckBox的CheckedChanged事件监听
@@ -316,7 +359,7 @@ fun ViewGroup.statusView(
                         ViewGroup.LayoutParams.MATCH_PARENT
                     )
                 )
-                nodataView.click(click = nodata_click)
+//                nodataView.click(click = nodata_click)
             }
         }
 
@@ -340,7 +383,7 @@ fun ViewGroup.statusView(
                         ViewGroup.LayoutParams.MATCH_PARENT
                     )
                 )
-                errorView.click(click = errorClick)
+//                errorView.click(click = errorClick)
             }
         }
 
