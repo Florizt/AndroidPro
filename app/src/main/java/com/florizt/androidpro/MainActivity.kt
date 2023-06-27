@@ -13,6 +13,7 @@ import com.florizt.base.delegate.viewBinding
 import com.florizt.base.delegate.viewModelsLifecycle
 import com.florizt.base.ext.clickFlow
 import com.florizt.base.ext.textChangeFlow
+import com.florizt.base.ext.toast
 import com.florizt.base.ui.ImmersionBars
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.FlowPreview

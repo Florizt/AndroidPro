@@ -3,7 +3,10 @@ package com.florizt.base.ext
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
+import android.os.Looper
+import android.widget.Toast
 import androidx.core.content.ContextCompat
+import androidx.room.jarjarred.org.antlr.v4.codegen.model.Loop
 import com.florizt.base.app.ContextWrapper
 
 /**
@@ -40,4 +43,19 @@ inline fun <reified AC : Activity> Context.startActivity(
     startActivity(Intent(this, AC::class.java).apply {
         args()
     })
+}
+
+/**
+ * 任意线程toast
+ * @param content String
+ */
+fun toast(content: String) {
+    Looper.myLooper() ?: run {
+        Looper.prepare()
+    }
+    Toast.makeText(ContextWrapper.context, content, Toast.LENGTH_SHORT).show()
+    if (Thread.currentThread() != Looper.getMainLooper().thread) {
+        Looper.loop()
+        Looper.myLooper()?.quit()
+    }
 }

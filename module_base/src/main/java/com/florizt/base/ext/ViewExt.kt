@@ -52,7 +52,6 @@ inline fun View.longClick(crossinline longClick: () -> Unit) {
  * @param block Function0<Unit> 执行体
  * @return Job
  */
-@OptIn(FlowPreview::class)
 @JvmOverloads
 inline fun View.clickFlow(
     thresholdMillis: Long = 500L,
@@ -67,7 +66,6 @@ inline fun View.clickFlow(
     .flowOn(dispatcher)
     .launchIn(scope)
 
-@FlowPreview
 fun <T> Flow<T>.throttleFirst(thresholdMillis: Long): Flow<T> = flow {
     var lastTime = 0L
     collect {
