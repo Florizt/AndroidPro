@@ -1,8 +1,14 @@
 package com.florizt.base.repository
 
+import androidx.paging.Pager
+import androidx.paging.PagingConfig
+import androidx.paging.PagingData
+import androidx.paging.PagingSource
+import androidx.paging.PagingState
 import com.florizt.base.repository.net.entity.ApiResponse
 import com.florizt.base.repository.net.entity.Resource
-import com.florizt.base.repository.net.RetrofitFactory
+import com.florizt.base.repository.net.entity.PageData
+import com.florizt.base.repository.net.entity.ResultException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.flow
@@ -89,4 +95,52 @@ inline fun <Local> networkBoundResourceOnlyCache(
             Resource.none()
         }
     })
+}
+
+fun <Remote, Local : Any> paging(
+    pageSize: Int,
+    prefetchDistance: Int,
+    fetch: suspend (Int, Int) -> ApiResponse<PageData<Remote>>,
+    transfer: suspend (PageData<Remote>) -> PageData<Local>,
+): Flow<PagingData<Local>> {
+    return Pager(
+        config = PagingConfig(
+            pageSize,
+            initialLoadSize = pageSize,
+            prefetchDistance = prefetchDistance,
+            enablePlaceholders = false
+        ),
+        pagingSourceFactory = {
+            object : PagingSource<Int, Local>() {
+                override fun getRefreshKey(state: PagingState<Int, Local>): Int? = null
+
+                override suspend fun load(params: LoadParams<Int>): LoadResult<Int, Local> {
+                    val position = params.key ?: 1
+                    return fetch.invoke(position, params.loadSize).run {
+                        if (isSuccess == true) {
+                            data?.run {
+                                transfer(this).run {
+                                    val nextKey = if (this.hasNextPage()) position + 1 else null
+                                    LoadResult.Page(
+                                        data = this.list,
+                                        prevKey = null,
+                                        nextKey = nextKey
+                                    )
+                                }
+                            } ?: run {
+                                LoadResult.Error(
+                                    ResultException(
+                                        ResultException.RESPONSEBODY_NONE_ERROR.first,
+                                        ResultException.RESPONSEBODY_NONE_ERROR.second
+                                    )
+                                )
+                            }
+                        } else {
+                            LoadResult.Error(ResultException(this.code, this.msg))
+                        }
+                    }
+                }
+            }
+        }
+    ).flow
 }
