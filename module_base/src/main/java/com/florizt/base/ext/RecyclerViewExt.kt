@@ -1,6 +1,7 @@
 package com.florizt.base.ext
 
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
 import androidx.databinding.DataBindingUtil
 import androidx.databinding.ViewDataBinding
@@ -13,19 +14,22 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.RecyclerView.LayoutManager
 import androidx.viewbinding.ViewBinding
+import androidx.viewpager2.widget.ViewPager2
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 
-inline fun <reified T : Any, reified VB : ViewBinding> RecyclerView.bind(
+inline fun <reified T : Any> RecyclerView.bind(
     scope: CoroutineScope,
     crossinline areItemsTheSame: (T, T) -> Boolean,
     crossinline areContentsTheSame: (T, T) -> Boolean,
     layout: LayoutManager,
     item: Flow<MutableList<T>>,
-    itemBinding: ItemBinding<T, VB>,
+    crossinline itemBinding: (Int, T) -> ItemBinding,
 ) {
-    val listAdapter = object : ListAdapter<T, VH<T, VB>>(
+    val itemBindings: MutableMap<Int, ItemBinding> = mutableMapOf()
+
+    val listAdapter = object : ListAdapter<T, VH<T>>(
         object : DiffUtil.ItemCallback<T>() {
             override fun areItemsTheSame(oldItem: T, newItem: T): Boolean {
                 return areItemsTheSame.invoke(oldItem, newItem)
@@ -37,20 +41,26 @@ inline fun <reified T : Any, reified VB : ViewBinding> RecyclerView.bind(
 
         }
     ) {
-        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VH<T, VB> {
-            return VH(
-                itemBinding.variableId!!,
-                DataBindingUtil.inflate(
-                    LayoutInflater.from(context),
-                    itemBinding.layoutId!!, null, false
-                ) ?: VB::class.java.getMethod("inflate", LayoutInflater::class.java).run {
-                    invoke(null, LayoutInflater.from(context)) as VB
-                },
-                itemBinding.bindData
-            )
+        override fun getItemViewType(position: Int): Int {
+            return itemBinding.invoke(position, getItem(position)).run {
+                hashCode().also {
+                    itemBindings.put(it, this)
+                }
+            }
         }
 
-        override fun onBindViewHolder(holder: VH<T, VB>, position: Int) {
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VH<T> {
+            return itemBindings.get(viewType)?.run {
+                val view = DataBindingUtil.inflate<ViewDataBinding?>(
+                    LayoutInflater.from(context),
+                    layoutId, null, false
+                )?.root ?: View.inflate(context, layoutId, null)
+
+                VH(variableId, view, bindData)
+            } ?: error("itemBinding init error")
+        }
+
+        override fun onBindViewHolder(holder: VH<T>, position: Int) {
             holder.bind(getItem(position))
         }
 
@@ -64,15 +74,17 @@ inline fun <reified T : Any, reified VB : ViewBinding> RecyclerView.bind(
     }
 }
 
-inline fun <reified T : Any, reified VB : ViewBinding> RecyclerView.bindPaging(
+inline fun <reified T : Any> RecyclerView.bindPaging(
     scope: CoroutineScope,
     crossinline areItemsTheSame: (T, T) -> Boolean,
     crossinline areContentsTheSame: (T, T) -> Boolean,
     layout: LayoutManager,
     item: Flow<PagingData<T>>,
-    itemBinding: ItemBinding<T, VB>,
+    crossinline itemBinding: (Int, T) -> ItemBinding,
 ) {
-    val listAdapter = object : PagingDataAdapter<T, VH<T, VB>>(
+    val itemBindings: MutableMap<Int, ItemBinding> = mutableMapOf()
+
+    val listAdapter = object : PagingDataAdapter<T, VH<T>>(
         object : DiffUtil.ItemCallback<T>() {
             override fun areItemsTheSame(oldItem: T, newItem: T): Boolean {
                 return areItemsTheSame.invoke(oldItem, newItem)
@@ -84,20 +96,28 @@ inline fun <reified T : Any, reified VB : ViewBinding> RecyclerView.bindPaging(
 
         }
     ) {
-        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VH<T, VB> {
-            return VH(
-                itemBinding.variableId!!,
-                DataBindingUtil.inflate(
-                    LayoutInflater.from(context),
-                    itemBinding.layoutId!!, null, false
-                ) ?: VB::class.java.getMethod("inflate", LayoutInflater::class.java).run {
-                    invoke(null, LayoutInflater.from(context)) as VB
-                },
-                itemBinding.bindData
-            )
+        override fun getItemViewType(position: Int): Int {
+            return getItem(position)?.run {
+                itemBinding.invoke(position, this).run {
+                    hashCode().also {
+                        itemBindings.put(it, this)
+                    }
+                }
+            } ?: error("item is null")
         }
 
-        override fun onBindViewHolder(holder: VH<T, VB>, position: Int) {
+        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VH<T> {
+            return itemBindings.get(viewType)?.run {
+                val view = DataBindingUtil.inflate<ViewDataBinding?>(
+                    LayoutInflater.from(context),
+                    layoutId, null, false
+                )?.root ?: View.inflate(context, layoutId, null)
+
+                VH(variableId, view, bindData)
+            } ?: error("itemBinding init error")
+        }
+
+        override fun onBindViewHolder(holder: VH<T>, position: Int) {
             getItem(position)?.let { holder.bind(it) }
         }
 
@@ -111,44 +131,26 @@ inline fun <reified T : Any, reified VB : ViewBinding> RecyclerView.bindPaging(
     }
 }
 
-class VH<T : Any, VB : ViewBinding> @JvmOverloads constructor(
+class VH<T : Any> constructor(
     val variableId: Int,
-    val vb: VB,
-    var bindData: ((T, VB) -> Unit)? = null,
-) : RecyclerView.ViewHolder(vb.root) {
+    val view: View,
+    val bindData: (View) -> Unit,
+) : RecyclerView.ViewHolder(view) {
+
     fun bind(t: T) {
-        if (vb is ViewDataBinding) {
-            vb.setVariable(variableId, t)
-        } else {
-            bindData?.invoke(t, vb)
+        DataBindingUtil.findBinding<ViewDataBinding?>(view)?.apply {
+            setVariable(variableId, t)
+        } ?: run {
+            bindData.invoke(view)
         }
     }
 }
 
-class ItemBinding<T : Any, VB : ViewBinding> private constructor() {
-    var variableId: Int? = null
-    var layoutId: Int? = null
-    var bindData: ((T, VB) -> Unit)? = null
-
-    @JvmOverloads
-    constructor(variableId: Int, layoutId: Int, bindData: ((T, VB) -> Unit)? = null) : this() {
-        this.variableId = variableId
-        this.layoutId = layoutId
-        this.bindData = bindData
-    }
-
-    companion object {
-        @JvmStatic
-        @JvmOverloads
-        fun <T : Any, VB : ViewBinding> of(
-            variableId: Int,
-            layoutId: Int,
-            bindData: ((T, VB) -> Unit)? = null,
-        ): ItemBinding<T, VB> {
-            return ItemBinding(variableId, layoutId, bindData)
-        }
-    }
-}
+data class ItemBinding @JvmOverloads constructor(
+    val variableId: Int,
+    val layoutId: Int,
+    val bindData: (View) -> Unit = {},
+)
 
 @JvmOverloads
 fun RecyclerView.linear(

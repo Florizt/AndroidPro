@@ -36,7 +36,7 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding.rec.apply {
-            bind<String, ItemMainBinding>(
+            bind(
                 scope = lifecycleScope,
                 areItemsTheSame = { oldItem, newItem ->
                     oldItem.hashCode() == newItem.hashCode()
@@ -46,7 +46,15 @@ class MainActivity : AppCompatActivity() {
                 },
                 layout = linear(),
                 item = list,
-                itemBinding = ItemBinding.of(BR.data, R.layout.item_main)
+                itemBinding = { position, data ->
+                    if (position % 2 == 0) {
+                        ItemBinding(BR.data, R.layout.item_main)
+                    } else {
+                        ItemBinding(BR.data, R.layout.item_main2,{
+                            it.findViewById<TextView>(R.id.text).text = data
+                        })
+                    }
+                }
             )
         }
 
