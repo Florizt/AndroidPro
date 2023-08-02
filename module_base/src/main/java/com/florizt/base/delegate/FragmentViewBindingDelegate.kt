@@ -67,6 +67,7 @@ inline fun <reified VB : ViewBinding> Fragment.viewBinding() = object : ReadOnly
             VB::class.java.getMethod("bind", View::class.java).run {
                 invoke(null, thisRef.requireView()) as VB
             }.apply {
+                binding = this
                 if (this is ViewDataBinding) {
                     lifecycleOwner = thisRef.viewLifecycleOwner
                 }

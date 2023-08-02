@@ -1,3 +1,5 @@
+@file:JvmName("MMKVCache")
+
 package com.florizt.base.repository.cache
 
 import android.os.Parcelable
@@ -16,7 +18,7 @@ import kotlin.reflect.KProperty
 inline fun <reified T> mmkv(
     key: String? = null,
     mode: Int = MMKV.SINGLE_PROCESS_MODE,
-    cryptKey: String? = null
+    cryptKey: String? = null,
 ) = object : ReadWriteProperty<Any, T?> {
     val mmkv = MMKV.defaultMMKV(mode, cryptKey)
     override fun getValue(thisRef: Any, property: KProperty<*>): T? {
@@ -24,9 +26,7 @@ inline fun <reified T> mmkv(
     }
 
     override fun setValue(thisRef: Any, property: KProperty<*>, value: T?) {
-        value?.apply {
-            mmkv.put(key ?: property.name, this)
-        }
+        mmkv.put(key ?: property.name, this)
     }
 }
 
@@ -41,7 +41,7 @@ inline fun <reified T> mmkv(
 inline fun <reified T : Parcelable> mmkvParcelable(
     key: String? = null,
     mode: Int = MMKV.SINGLE_PROCESS_MODE,
-    cryptKey: String? = null
+    cryptKey: String? = null,
 ) = object : ReadWriteProperty<Any, T?> {
     val mmkv = MMKV.defaultMMKV(mode, cryptKey)
     override fun getValue(thisRef: Any, property: KProperty<*>): T? {
@@ -49,9 +49,7 @@ inline fun <reified T : Parcelable> mmkvParcelable(
     }
 
     override fun setValue(thisRef: Any, property: KProperty<*>, value: T?) {
-        value?.apply {
-            mmkv.put(key ?: property.name, this)
-        }
+        mmkv.put(key ?: property.name, this)
     }
 }
 
@@ -62,16 +60,16 @@ inline fun <reified T : Parcelable> mmkvParcelable(
  * @param value Any 值
  * @return Boolean
  */
-fun MMKV.put(key: String, value: Any) {
-    when (value) {
-        is String -> encode(key, value)
-        is Long -> encode(key, value)
-        is Boolean -> encode(key, value)
-        is Float -> encode(key, value)
-        is Int -> encode(key, value)
-        is Double -> encode(key, value)
-        is ByteArray -> encode(key, value)
-        is Parcelable -> encode(key, value)
+inline fun <reified T> MMKV.put(key: String, value: T?) {
+    when (T::class) {
+        String::class -> encode(key, value as? String)
+        Long::class -> encode(key, value as? Long ?: 0L)
+        Boolean::class -> encode(key, value as? Boolean ?: false)
+        Float::class -> encode(key, value as? Float ?: 0f)
+        Int::class -> encode(key, value as? Int ?: 0)
+        Double::class -> encode(key, value as? Double ?: 0.0)
+        ByteArray::class -> encode(key, value as? ByteArray)
+        Parcelable::class -> encode(key, value as? Parcelable)
         else -> error("mmkv not support this type")
     }
 }
@@ -84,13 +82,13 @@ fun MMKV.put(key: String, value: Any) {
  */
 inline fun <reified T> MMKV.get(key: String): T? {
     return when (T::class) {
-        String::class -> decodeString(key) as T
+        String::class -> decodeString(key) as? T
         Long::class -> decodeLong(key) as T
         Boolean::class -> decodeBool(key) as T
         Float::class -> decodeFloat(key) as T
         Int::class -> decodeInt(key) as T
         Double::class -> decodeDouble(key) as T
-        ByteArray::class -> decodeBytes(key) as T
+        ByteArray::class -> decodeBytes(key) as? T
         else -> error("mmkv not support this type")
     }
 }
@@ -105,6 +103,10 @@ inline fun <reified T : Parcelable> MMKV.getParcelable(key: String): T? {
     return decodeParcelable(key, T::class.java)
 }
 
-fun MMKV.removeKey(key: String) {
-    removeValueForKey(key)
+fun removeKey(
+    key: String,
+    mode: Int = MMKV.SINGLE_PROCESS_MODE,
+    cryptKey: String? = null,
+) {
+    MMKV.defaultMMKV(mode, cryptKey).removeValueForKey(key)
 }

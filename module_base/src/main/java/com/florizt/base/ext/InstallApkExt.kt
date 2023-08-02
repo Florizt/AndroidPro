@@ -1,3 +1,5 @@
+@file:JvmName("InstallApkExt")
+
 package com.florizt.base.ext
 
 import android.content.Context

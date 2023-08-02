@@ -1,7 +1,39 @@
+@file:JvmName("DisplayExt")
+
 package com.florizt.base.ext
 
 import android.util.TypedValue
 import com.florizt.base.app.ContextWrapper
+
+/**
+ * 屏幕宽度，单位dp
+ */
+val screenWidthDp
+    get() = ContextWrapper.context.resources.configuration.screenWidthDp
+
+/**
+ * 屏幕高度，单位dp
+ */
+val screenHeightDp
+    get() = ContextWrapper.context.resources.configuration.screenHeightDp
+
+/**
+ * 屏幕宽度，单位px
+ */
+val screenWidthPx
+    get() = (screenWidthDp * density).toInt()
+
+/**
+ * 屏幕高度，单位px
+ */
+val screenHeightPx
+    get() = (screenHeightDp * density).toInt()
+
+/**
+ * 屏幕缩放比
+ */
+val density
+    get() = ContextWrapper.context.resources.displayMetrics.density
 
 /**
  * 单位转换，px2dp(Int->Int)

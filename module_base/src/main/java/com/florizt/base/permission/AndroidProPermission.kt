@@ -1,3 +1,5 @@
+@file:JvmName("AndroidProPermission")
+
 package com.florizt.base.permission
 
 import androidx.fragment.app.FragmentActivity

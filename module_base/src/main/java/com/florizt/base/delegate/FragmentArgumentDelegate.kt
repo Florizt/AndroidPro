@@ -2,6 +2,7 @@ package com.florizt.base.delegate
 
 import android.os.Bundle
 import androidx.fragment.app.Fragment
+import com.florizt.base.ext.got
 import com.florizt.base.ext.put
 import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.KProperty
@@ -12,22 +13,19 @@ import kotlin.reflect.KProperty
  * @return ReadWriteProperty<Fragment, T>
  */
 @JvmOverloads
-fun <V> argument(key: String? = null) = object : ReadWriteProperty<Fragment, V> {
-    @Suppress("UNCHECKED_CAST")
+inline fun <reified V> argument(key: String? = null) = object : ReadWriteProperty<Fragment, V?> {
     override fun getValue(
         thisRef: Fragment,
         property: KProperty<*>,
-    ): V {
-        val k = key ?: property.name
-        return thisRef.arguments?.get(k) as? V
-            ?: error("Property $k could not be read")
+    ): V? {
+        return thisRef.arguments?.got(key ?: property.name)
     }
 
     override fun setValue(
         thisRef: Fragment,
-        property: KProperty<*>, value: V,
+        property: KProperty<*>, value: V?,
     ) {
-        thisRef.arguments = (thisRef.arguments ?: Bundle().also(thisRef::setArguments)).apply {
+        thisRef.arguments ?: Bundle().also(thisRef::setArguments).apply {
             put(key ?: property.name, value)
         }
     }

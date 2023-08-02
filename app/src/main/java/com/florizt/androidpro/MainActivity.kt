@@ -31,39 +31,8 @@ class MainActivity : AppCompatActivity() {
     private val binding by viewBinding<ActivityMainBinding>()
     private val viewModel by viewModelsLifecycle<MainViewModel>()
 
-    private val list = MutableSharedFlow<MutableList<String>>()
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding.rec.apply {
-            bind(
-                scope = lifecycleScope,
-                areItemsTheSame = { oldItem, newItem ->
-                    oldItem.hashCode() == newItem.hashCode()
-                },
-                areContentsTheSame = { oldItem, newItem ->
-                    oldItem === newItem
-                },
-                layout = linear(),
-                item = list,
-                itemBinding = { position, data ->
-                    if (position % 2 == 0) {
-                        ItemBinding(BR.data, R.layout.item_main)
-                    } else {
-                        ItemBinding(BR.data, R.layout.item_main2,{
-                            it.findViewById<TextView>(R.id.text).text = data
-                        })
-                    }
-                }
-            )
-        }
-
-        lifecycleScope.launch {
-            val l = mutableListOf<String>()
-            for (i in 0..10) {
-                l.add("$i")
-            }
-            list.emit(l)
-        }
+        binding
     }
 }

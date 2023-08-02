@@ -1,3 +1,5 @@
+@file:JvmName("EncryptExt")
+
 package com.florizt.base.ext
 
 import android.annotation.SuppressLint

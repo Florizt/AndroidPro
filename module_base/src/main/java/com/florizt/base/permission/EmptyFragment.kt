@@ -19,11 +19,11 @@ import com.florizt.base.delegate.argument
  * @property launcher ActivityResultLauncher<Array<String>>?
  */
 class EmptyFragment : Fragment() {
-    private var permissions: Array<String> by argument()
+    private var permissions: Array<String>? by argument()
 
-    private var granted: () -> Unit by argument()
-    private var rationale: (MutableList<String>) -> Unit by argument()
-    private var denied: (MutableList<String>) -> Unit by argument()
+    private var granted: (() -> Unit)? by argument()
+    private var rationale: ((MutableList<String>) -> Unit)? by argument()
+    private var denied: ((MutableList<String>) -> Unit)? by argument()
 
     private var launcher: ActivityResultLauncher<Array<String>>? = null
 
@@ -58,12 +58,12 @@ class EmptyFragment : Fragment() {
                     deniedList.add(it.key)
                 }
             }
-            if (grantedList.size == permissions.size) {
-                granted.invoke()
+            if (grantedList.size == permissions?.size) {
+                granted?.invoke()
             } else if (rationaleList.size > 0) {
-                rationale.invoke(rationaleList)
+                rationale?.invoke(rationaleList)
             } else {
-                denied.invoke(deniedList)
+                denied?.invoke(deniedList)
             }
         }
     }

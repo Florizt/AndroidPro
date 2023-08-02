@@ -1,3 +1,5 @@
+@file:JvmName("GsonExt")
+
 package com.florizt.base.ext
 
 import com.google.gson.Gson

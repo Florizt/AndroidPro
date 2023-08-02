@@ -1,3 +1,5 @@
+@file:JvmName("ViewPager2Ext")
+
 package com.florizt.base.ext
 
 import android.view.LayoutInflater
@@ -17,6 +19,18 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 
+/**
+ * ViewPager2快速绑定，减少Adapter创建
+ * @receiver ViewPager2
+ * @param scope CoroutineScope 生命周期域
+ * @param orientation Int 方向
+ * @param offscreenPageLimit Int 缓存个数
+ * @param pageTransformer PageTransformer
+ * @param areItemsTheSame Function2<T, T, Boolean> 是否同一个item
+ * @param areContentsTheSame Function2<T, T, Boolean> 是否同一个content
+ * @param item Flow<MutableList<T>> 数据
+ * @param itemBinding ItemBinding<T> 布局
+ */
 @JvmOverloads
 inline fun <reified T : Any> ViewPager2.bind(
     scope: CoroutineScope,
@@ -29,7 +43,7 @@ inline fun <reified T : Any> ViewPager2.bind(
     crossinline areItemsTheSame: (T, T) -> Boolean,
     crossinline areContentsTheSame: (T, T) -> Boolean,
     item: Flow<MutableList<T>>,
-    itemBinding: ItemBinding,
+    itemBinding: ItemBinding<T>,
 ) {
     val listAdapter = object : ListAdapter<T, VH<T>>(
         object : DiffUtil.ItemCallback<T>() {
@@ -54,7 +68,6 @@ inline fun <reified T : Any> ViewPager2.bind(
         override fun onBindViewHolder(holder: VH<T>, position: Int) {
             holder.bind(getItem(position))
         }
-
     }
     this.orientation = orientation
     this.offscreenPageLimit = offscreenPageLimit
@@ -67,6 +80,16 @@ inline fun <reified T : Any> ViewPager2.bind(
     }
 }
 
+/**
+ * ViewPager2快速绑定Fragment，减少Adapter创建
+ * @receiver ViewPager2
+ * @param fragmentActivity FragmentActivity
+ * @param orientation Int 方向
+ * @param offscreenPageLimit Int 缓存个数
+ * @param pageTransformer PageTransformer
+ * @param item MutableList<T> 数据
+ * @param itemBinding Function2<Int, T, Fragment> 布局
+ */
 @JvmOverloads
 inline fun <reified T : Any> ViewPager2.bind(
     fragmentActivity: FragmentActivity,

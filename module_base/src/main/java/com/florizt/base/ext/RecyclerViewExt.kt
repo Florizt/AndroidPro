@@ -1,3 +1,5 @@
+@file:JvmName("RecyclerViewExt")
+
 package com.florizt.base.ext
 
 import android.view.LayoutInflater
@@ -5,30 +7,34 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.databinding.DataBindingUtil
 import androidx.databinding.ViewDataBinding
-import androidx.paging.PagingData
-import androidx.paging.PagingDataAdapter
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.RecyclerView.LayoutManager
-import androidx.viewbinding.ViewBinding
-import androidx.viewpager2.widget.ViewPager2
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 
+/**
+ * RecyclerView快速绑定，减少Adapter创建
+ * @receiver RecyclerView
+ * @param scope CoroutineScope 生命周期域
+ * @param areItemsTheSame Function2<T, T, Boolean> 是否同一个item
+ * @param areContentsTheSame Function2<T, T, Boolean> 是否同一个content
+ * @param layout LayoutManager LayoutManager，可用[linear]或者[grid]
+ * @param item Flow<List<T>> 数据
+ * @param itemBinding ItemBinding<T> 布局
+ */
 inline fun <reified T : Any> RecyclerView.bind(
     scope: CoroutineScope,
     crossinline areItemsTheSame: (T, T) -> Boolean,
     crossinline areContentsTheSame: (T, T) -> Boolean,
     layout: LayoutManager,
-    item: Flow<MutableList<T>>,
-    crossinline itemBinding: (Int, T) -> ItemBinding,
+    item: Flow<List<T>>,
+    itemBinding: ItemBinding<T>,
 ) {
-    val itemBindings: MutableMap<Int, ItemBinding> = mutableMapOf()
-
     val listAdapter = object : ListAdapter<T, VH<T>>(
         object : DiffUtil.ItemCallback<T>() {
             override fun areItemsTheSame(oldItem: T, newItem: T): Boolean {
@@ -41,23 +47,12 @@ inline fun <reified T : Any> RecyclerView.bind(
 
         }
     ) {
-        override fun getItemViewType(position: Int): Int {
-            return itemBinding.invoke(position, getItem(position)).run {
-                hashCode().also {
-                    itemBindings.put(it, this)
-                }
-            }
-        }
-
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VH<T> {
-            return itemBindings.get(viewType)?.run {
-                val view = DataBindingUtil.inflate<ViewDataBinding?>(
-                    LayoutInflater.from(context),
-                    layoutId, null, false
-                )?.root ?: View.inflate(context, layoutId, null)
-
-                VH(variableId, view, bindData)
-            } ?: error("itemBinding init error")
+            val view = DataBindingUtil.inflate<ViewDataBinding?>(
+                LayoutInflater.from(context),
+                itemBinding.layoutId, null, false
+            )?.root ?: View.inflate(context, itemBinding.layoutId, null)
+            return VH(itemBinding.variableId, view, itemBinding.bindData)
         }
 
         override fun onBindViewHolder(holder: VH<T>, position: Int) {
@@ -69,89 +64,55 @@ inline fun <reified T : Any> RecyclerView.bind(
     adapter = listAdapter
     scope.launch {
         item.collect {
-            listAdapter.submitList(it)
+            listAdapter.submitList(mutableListOf<T>().apply { addAll(it) })
         }
     }
 }
 
-inline fun <reified T : Any> RecyclerView.bindPaging(
-    scope: CoroutineScope,
-    crossinline areItemsTheSame: (T, T) -> Boolean,
-    crossinline areContentsTheSame: (T, T) -> Boolean,
-    layout: LayoutManager,
-    item: Flow<PagingData<T>>,
-    crossinline itemBinding: (Int, T) -> ItemBinding,
-) {
-    val itemBindings: MutableMap<Int, ItemBinding> = mutableMapOf()
-
-    val listAdapter = object : PagingDataAdapter<T, VH<T>>(
-        object : DiffUtil.ItemCallback<T>() {
-            override fun areItemsTheSame(oldItem: T, newItem: T): Boolean {
-                return areItemsTheSame.invoke(oldItem, newItem)
-            }
-
-            override fun areContentsTheSame(oldItem: T, newItem: T): Boolean {
-                return areContentsTheSame.invoke(oldItem, newItem)
-            }
-
-        }
-    ) {
-        override fun getItemViewType(position: Int): Int {
-            return getItem(position)?.run {
-                itemBinding.invoke(position, this).run {
-                    hashCode().also {
-                        itemBindings.put(it, this)
-                    }
-                }
-            } ?: error("item is null")
-        }
-
-        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VH<T> {
-            return itemBindings.get(viewType)?.run {
-                val view = DataBindingUtil.inflate<ViewDataBinding?>(
-                    LayoutInflater.from(context),
-                    layoutId, null, false
-                )?.root ?: View.inflate(context, layoutId, null)
-
-                VH(variableId, view, bindData)
-            } ?: error("itemBinding init error")
-        }
-
-        override fun onBindViewHolder(holder: VH<T>, position: Int) {
-            getItem(position)?.let { holder.bind(it) }
-        }
-
-    }
-    layoutManager = layout
-    adapter = listAdapter
-    scope.launch {
-        item.collect {
-            listAdapter.submitData(it)
-        }
-    }
-}
-
+/**
+ * ViewHolder
+ * @param T : Any 数据类型
+ * @property variableId Int DataBinding的id，ViewBinding可随意传
+ * @property view View 布局
+ * @property bindData Function2<View, T, Unit> 自实现布局渲染
+ * @constructor
+ */
 class VH<T : Any> constructor(
     val variableId: Int,
     val view: View,
-    val bindData: (View) -> Unit,
+    val bindData: (View, T) -> Unit,
 ) : RecyclerView.ViewHolder(view) {
 
     fun bind(t: T) {
         DataBindingUtil.findBinding<ViewDataBinding?>(view)?.apply {
             setVariable(variableId, t)
         } ?: run {
-            bindData.invoke(view)
+            bindData.invoke(view, t)
         }
     }
 }
 
-data class ItemBinding @JvmOverloads constructor(
+/**
+ * 布局
+ * @param T : Any 数据类型
+ * @property variableId Int DataBinding的id，ViewBinding可随意传
+ * @property layoutId Int 布局id
+ * @property bindData Function2<View, T, Unit> 自实现布局渲染
+ * @constructor
+ */
+data class ItemBinding<T : Any> @JvmOverloads constructor(
     val variableId: Int,
     val layoutId: Int,
-    val bindData: (View) -> Unit = {},
+    val bindData: (View, T) -> Unit = { _, _ -> },
 )
 
+/**
+ * LinearLayoutManager
+ * @receiver RecyclerView
+ * @param orientation Int
+ * @param reverseLayout Boolean
+ * @return LayoutManager
+ */
 @JvmOverloads
 fun RecyclerView.linear(
     orientation: Int = RecyclerView.VERTICAL,
@@ -160,6 +121,14 @@ fun RecyclerView.linear(
     return LinearLayoutManager(context, orientation, reverseLayout)
 }
 
+/**
+ * GridLayoutManager
+ * @receiver RecyclerView
+ * @param spanCount Int
+ * @param orientation Int
+ * @param reverseLayout Boolean
+ * @return LayoutManager
+ */
 @JvmOverloads
 fun RecyclerView.grid(
     spanCount: Int,

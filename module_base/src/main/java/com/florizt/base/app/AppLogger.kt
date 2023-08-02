@@ -1,5 +1,8 @@
+@file:JvmName("AppLogger")
+
 package com.florizt.base.app
 
+import android.util.Log
 import com.dgrlucky.log.LogX
 
 /**
@@ -14,57 +17,35 @@ object AppLogger {
     }
 
     enum class LEVEL {
-        V, D, I, W, E
+        V, D, I, W, E, NORMAL
     }
 
     @JvmStatic
-    fun log(level: LEVEL, any: Any) {
+    fun log(level: LEVEL, msg: String) {
         if (!debug) return
         when (level) {
             LEVEL.V -> {
-                LogX.v(any)
+                LogX.v(msg)
             }
 
             LEVEL.D -> {
-                LogX.d(any)
+                LogX.d(msg)
             }
 
             LEVEL.I -> {
-                LogX.i(any)
+                LogX.i(msg)
             }
 
             LEVEL.W -> {
-                LogX.w(any)
+                LogX.w(msg)
             }
 
             LEVEL.E -> {
-                LogX.e(any)
-            }
-        }
-    }
-
-    @JvmStatic
-    fun log(level: LEVEL, msg: String, vararg args: Any) {
-        if (!debug) return
-        when (level) {
-            LEVEL.V -> {
-                LogX.v(msg, args)
+                LogX.e(msg)
             }
 
-            LEVEL.D -> {
-                LogX.d(msg, args)
-            }
-
-            LEVEL.I -> {
-                LogX.i(msg, args)
-            }
-
-            LEVEL.W -> {
-                LogX.w(msg, args)
-            }
-
-            LEVEL.E -> {
-                LogX.e(msg, args)
+            LEVEL.NORMAL -> {
+                Log.v("AppLogger", msg)
             }
         }
     }

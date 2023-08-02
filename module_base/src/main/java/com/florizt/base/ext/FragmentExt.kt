@@ -1,3 +1,5 @@
+@file:JvmName("FragmentExt")
+
 package com.florizt.base.ext
 
 import androidx.fragment.app.DialogFragment

@@ -1,3 +1,5 @@
+@file:JvmName("ContextWrapper")
+
 package com.florizt.base.app
 
 import android.annotation.SuppressLint

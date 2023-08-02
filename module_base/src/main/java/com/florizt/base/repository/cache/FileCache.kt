@@ -1,3 +1,5 @@
+@file:JvmName("FileCache")
+
 package com.florizt.base.repository.cache
 
 import android.content.Context

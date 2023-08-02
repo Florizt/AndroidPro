@@ -1,8 +1,8 @@
+@file:JvmName("FlowBus")
+
 package com.florizt.base.app
 
-import android.util.Log
 import androidx.lifecycle.*
-import com.florizt.base.ext.safe
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -54,7 +54,7 @@ object FlowBus {
         fun regist(lifecycleOwner: LifecycleOwner, action: (T) -> Unit) {
             lifecycleOwner.lifecycle.addObserver(this)
             lifecycleOwner.lifecycleScope.launch {
-                events.collect { safe { action(it) } }
+                events.collect { action(it) }
             }
         }
 

@@ -1,3 +1,5 @@
+@file:JvmName("ContextExt")
+
 package com.florizt.base.ext
 
 import android.app.Activity
@@ -6,7 +8,6 @@ import android.content.Intent
 import android.os.Looper
 import android.widget.Toast
 import androidx.core.content.ContextCompat
-import androidx.room.jarjarred.org.antlr.v4.codegen.model.Loop
 import com.florizt.base.app.ContextWrapper
 
 /**

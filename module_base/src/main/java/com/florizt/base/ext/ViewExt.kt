@@ -1,7 +1,8 @@
+@file:JvmName("ViewExt")
+
 package com.florizt.base.ext
 
 import android.os.Build
-import android.text.Editable
 import android.text.TextUtils
 import android.text.TextWatcher
 import android.text.method.LinkMovementMethod
@@ -11,7 +12,6 @@ import android.widget.*
 import androidx.annotation.RequiresApi
 import androidx.appcompat.widget.SwitchCompat
 import androidx.core.view.forEach
-import androidx.core.view.marginTop
 import androidx.recyclerview.widget.*
 import com.florizt.base.delegate.noOpDelegate
 import kotlinx.coroutines.CoroutineDispatcher
@@ -29,7 +29,6 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
-import kotlin.coroutines.CoroutineContext
 
 /**
  * 长按事件
@@ -111,9 +110,6 @@ inline fun <T> EditText.textChangeFlow(
     .flowOn(Dispatchers.IO)
     .onEach { result(it) }
     .launchIn(scope)
-
-
-
 
 
 /**

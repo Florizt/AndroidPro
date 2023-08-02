@@ -1,3 +1,5 @@
+@file:JvmName("Standard")
+
 package com.florizt.base.ext
 
 import kotlinx.coroutines.CancellableContinuation

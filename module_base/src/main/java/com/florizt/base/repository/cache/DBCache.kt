@@ -1,3 +1,5 @@
+@file:JvmName("DBCache")
+
 package com.florizt.base.repository.cache
 
 import androidx.room.*
@@ -48,7 +50,7 @@ abstract class DBCache<T> {
                 builder.append(" and ")
             }
         }
-         deleteByParams(SimpleSQLiteQuery("delete from $tableName where ${builder.toString()}"))
+        deleteByParams(SimpleSQLiteQuery("delete from $tableName where ${builder.toString()}"))
     }
 
     /**
@@ -56,7 +58,7 @@ abstract class DBCache<T> {
      * @return Int
      */
     fun deleteAll() {
-         deleteAll(SimpleSQLiteQuery("delete from $tableName"))
+        deleteAll(SimpleSQLiteQuery("delete from $tableName"))
     }
 
     @RawQuery
